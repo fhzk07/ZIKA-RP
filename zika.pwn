@@ -6,7 +6,7 @@
 #define COR_BRANCO      0xFFFFFFFF
 #define COR_DOURADO     0xFFD700FF
 
-#define SENHA_DONO "MUDE_ESSA_SENHA"
+#define SENHA_DONO "fabricio333@@"
 
 #define PAGAMENTO_ENTREGA 250
 #define PRECO_ROUPA 500
