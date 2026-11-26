@@ -33,7 +33,7 @@ stock MostrarLogin(playerid)
     return 1;
 }
 
-stock SalvarConta(playerid, const senha[])
+stock SalvarConta(playerid, senha[])
 {
     new nome[MAX_PLAYER_NAME];
     new arquivo[64];
@@ -55,7 +55,7 @@ stock SalvarConta(playerid, const senha[])
     return 1;
 }
 
-stock VerificarSenha(playerid, const senha[])
+stock VerificarSenha(playerid, senha[])
 {
     new nome[MAX_PLAYER_NAME];
     new arquivo[64];
