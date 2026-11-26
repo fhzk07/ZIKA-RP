@@ -1,3 +1,4 @@
+
 #include <a_samp>
 
 #define COR_VERDE       0x00FF00FF
@@ -6,7 +7,7 @@
 #define COR_BRANCO      0xFFFFFFFF
 #define COR_DOURADO     0xFFD700FF
 
-#define SENHA_DONO "fabricio333@@"
+#define SENHA_DONO 'fabricio333@@'
 
 #define PAGAMENTO_ENTREGA 250
 #define PRECO_ROUPA 500
@@ -46,6 +47,7 @@ new EntregaEtapa[MAX_PLAYERS];
 new SkinOriginal[MAX_PLAYERS];
 new VeiculoConcessionaria[MAX_PLAYERS];
 new VeiculoDono[MAX_PLAYERS];
+
 new Float:MarcacaoX[MAX_PLAYERS];
 new Float:MarcacaoY[MAX_PLAYERS];
 new Float:MarcacaoZ[MAX_PLAYERS];
@@ -71,7 +73,7 @@ stock MostrarPainelDono(playerid)
         DIALOG_DONO_PAINEL,
         DIALOG_STYLE_LIST,
         "PAINEL DO PROPRIETARIO - ZIKA RP",
-        "Equipar skin exclusiva\nPegar veiculo\nTeletransportar\nAtivar/desativar jetpack\nReceber $100.000\nRestaurar vida e colete\nReaparecer no spawn",
+        "Equipar skin exclusiva\nPegar veiculo\nTeletransportar\nAtivar/desativar jetpack\nReceber $100.000\nRestaurar vida e colete\nReaparecer no spawn\nTeletransportar para marcacao do mapa",
         "Selecionar",
         "Fechar"
     );
@@ -129,6 +131,7 @@ public OnPlayerConnect(playerid)
 {
     TrabalhandoEntrega[playerid] = false;
     AdminAutenticado[playerid] = false;
+    TemMarcacao[playerid] = false;
 
     EntregaVeiculo[playerid] = INVALID_VEHICLE_ID;
     EntregaEtapa[playerid] = 0;
@@ -210,9 +213,20 @@ public OnPlayerSpawn(playerid)
     {
         SetPlayerColor(playerid, COR_DOURADO);
     }
+
+    SendClientMessage(
+        playerid,
+        COR_CIANO,
+        "Divirta-se na cidade ZIKA RP!"
+    );
+
+    return 1;
+}
+
+// MARCACAO NO MAPA PARA O DONO
 public OnPlayerClickMap(playerid, Float:fX, Float:fY, Float:fZ)
 {
-    if (!EhDono(playerid))
+    if (!EhDono(playerid) || !AdminAutenticado[playerid])
         return 1;
 
     MarcacaoX[playerid] = fX;
@@ -224,16 +238,7 @@ public OnPlayerClickMap(playerid, Float:fX, Float:fY, Float:fZ)
     SendClientMessage(
         playerid,
         COR_DOURADO,
-        "Marcacao salva! Use o painel do dono para teleportar."
-    );
-
-    return 1;
-}
-
-    SendClientMessage(
-        playerid,
-        COR_CIANO,
-        "Divirta-se na cidade ZIKA RP!"
+        "Marcacao salva! Use /dono e escolha teletransportar para marcacao do mapa."
     );
 
     return 1;
@@ -647,6 +652,39 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         {
             SpawnPlayer(playerid);
         }
+        else if (listitem == 7)
+        {
+            if (!TemMarcacao[playerid])
+            {
+                SendClientMessage(
+                    playerid,
+                    COR_VERMELHO,
+                    "Voce ainda nao marcou nenhum local no mapa."
+                );
+                return 1;
+            }
+
+            if (IsPlayerInAnyVehicle(playerid))
+            {
+                RemovePlayerFromVehicle(playerid);
+            }
+
+            SetPlayerInterior(playerid, 0);
+            SetPlayerVirtualWorld(playerid, 0);
+
+            SetPlayerPosFindZ(
+                playerid,
+                MarcacaoX[playerid],
+                MarcacaoY[playerid],
+                MarcacaoZ[playerid]
+            );
+
+            SendClientMessage(
+                playerid,
+                COR_DOURADO,
+                "Voce foi teleportado para a marcacao do mapa!"
+            );
+        }
 
         return 1;
     }
@@ -981,6 +1019,7 @@ public OnPlayerDisconnect(playerid, reason)
 
     TrabalhandoEntrega[playerid] = false;
     AdminAutenticado[playerid] = false;
+    TemMarcacao[playerid] = false;
 
     EntregaVeiculo[playerid] = INVALID_VEHICLE_ID;
     VeiculoConcessionaria[playerid] = INVALID_VEHICLE_ID;
