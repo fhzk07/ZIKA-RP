@@ -11,7 +11,6 @@
 #define MOCHILA_OBJETO 19559
 #define SLOT_MOCHILA 1
 
-// Agencia de empregos
 #define AGENCIA_X 1477.5
 #define AGENCIA_Y -1771.0
 #define AGENCIA_Z 18.8
@@ -42,7 +41,6 @@ public OnGameModeInit()
     SetWorldTime(12);
     SetWeather(1);
 
-    // Logo ZIKA RP
     ZikaLogo = TextDrawCreate(320.0, 12.0, "ZIKA RP");
     TextDrawAlignment(ZikaLogo, 2);
     TextDrawLetterSize(ZikaLogo, 0.50, 1.80);
@@ -53,7 +51,6 @@ public OnGameModeInit()
     TextDrawSetProportional(ZikaLogo, 1);
     TextDrawSetSelectable(ZikaLogo, 0);
 
-    // NPC da agencia de empregos
     FuncionarioEmpregos = CreateActor(
         17, AGENCIA_X, AGENCIA_Y, AGENCIA_Z, 180.0
     );
@@ -93,7 +90,7 @@ public OnPlayerSpawn(playerid)
     return 1;
 }
 
-// Atualiza o destino e a seta do GPS
+// GPS atual da entrega
 stock AtualizarRotaEntrega(playerid)
 {
     if (EntregaEtapa[playerid] == 0)
@@ -124,7 +121,6 @@ stock AtualizarRotaEntrega(playerid)
     return 1;
 }
 
-// Iniciar emprego
 stock IniciarEntrega(playerid)
 {
     new Float:x, Float:y, Float:z, Float:angulo;
@@ -156,11 +152,8 @@ stock IniciarEntrega(playerid)
     }
 
     SkinOriginal[playerid] = GetPlayerSkin(playerid);
-
-    // Uniforme de entregador
     SetPlayerSkin(playerid, 155);
 
-    // Mochila nas costas
     SetPlayerAttachedObject(
         playerid,
         SLOT_MOCHILA,
@@ -190,7 +183,6 @@ stock IniciarEntrega(playerid)
     return 1;
 }
 
-// Encerrar emprego
 stock PararEntrega(playerid)
 {
     if (!TrabalhandoEntrega[playerid])
@@ -213,7 +205,6 @@ stock PararEntrega(playerid)
     }
 
     RemovePlayerAttachedObject(playerid, SLOT_MOCHILA);
-
     SetPlayerSkin(playerid, SkinOriginal[playerid]);
 
     EntregaVeiculo[playerid] = INVALID_VEHICLE_ID;
@@ -226,7 +217,6 @@ stock PararEntrega(playerid)
     return 1;
 }
 
-// Conclusao de entrega
 public OnPlayerEnterRaceCheckpoint(playerid)
 {
     if (!TrabalhandoEntrega[playerid])
@@ -259,7 +249,6 @@ public OnPlayerEnterRaceCheckpoint(playerid)
     return 1;
 }
 
-// Dialogos e comandos
 public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 {
     if (dialogid == DIALOG_EMPREGO)
@@ -281,10 +270,27 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 
 public OnPlayerCommandText(playerid, cmdtext[])
 {
+    // Mostra as coordenadas da posicao atual
+    if (strcmp(cmdtext, "/pos", true) == 0)
+    {
+        new Float:x, Float:y, Float:z, Float:angulo;
+        new mensagem[144];
+
+        GetPlayerPos(playerid, x, y, z);
+        GetPlayerFacingAngle(playerid, angulo);
+
+        format(mensagem, sizeof(mensagem),
+            "POSICAO: X: %.2f | Y: %.2f | Z: %.2f | ANG: %.2f",
+            x, y, z, angulo);
+
+        SendClientMessage(playerid, COR_CIANO, mensagem);
+        return 1;
+    }
+
     if (strcmp(cmdtext, "/ajuda", true) == 0)
     {
         SendClientMessage(playerid, COR_CIANO,
-            "COMANDOS: /empregos /parar /vida /colete /spawn");
+            "COMANDOS: /empregos /parar /vida /colete /spawn /pos");
         return 1;
     }
 
@@ -313,9 +319,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
     }
 
     if (strcmp(cmdtext, "/parar", true) == 0)
-    {
         return PararEntrega(playerid);
-    }
 
     if (strcmp(cmdtext, "/vida", true) == 0)
     {
