@@ -1,4 +1,3 @@
-
 #include <a_samp>
 
 #define COR_VERDE       0x00FF00FF
@@ -7,7 +6,7 @@
 #define COR_BRANCO      0xFFFFFFFF
 #define COR_DOURADO     0xFFD700FF
 
-#define SENHA_DONO "fabricio333@@"
+#define SENHA_DONO "MUDE_ESSA_SENHA"
 
 #define PAGAMENTO_ENTREGA 250
 #define PRECO_ROUPA 500
@@ -61,12 +60,29 @@ stock bool:EhDono(playerid)
     return (strcmp(nome, "Fhzk", true) == 0);
 }
 
+stock MostrarPainelDono(playerid)
+{
+    ShowPlayerDialog(
+        playerid,
+        DIALOG_DONO_PAINEL,
+        DIALOG_STYLE_LIST,
+        "PAINEL DO PROPRIETARIO - ZIKA RP",
+        "Equipar skin exclusiva\nPegar veiculo\nTeletransportar\nAtivar/desativar jetpack\nReceber $100.000\nRestaurar vida e colete\nReaparecer no spawn",
+        "Selecionar",
+        "Fechar"
+    );
+    return 1;
+}
+
 public OnGameModeInit()
 {
     SetGameModeText("ZIKA RP - Mobile");
 
-    AddPlayerClass(0, 1481.0, -1771.0, 18.8, 90.0,
-        0, 0, 0, 0, 0, 0);
+    AddPlayerClass(
+        0,
+        1481.0, -1771.0, 18.8, 90.0,
+        0, 0, 0, 0, 0, 0
+    );
 
     ShowPlayerMarkers(PLAYER_MARKERS_MODE_GLOBAL);
     ShowNameTags(true);
@@ -84,14 +100,22 @@ public OnGameModeInit()
     TextDrawSetSelectable(ZikaLogo, 0);
 
     FuncionarioEmpregos = CreateActor(
-        17, AGENCIA_X, AGENCIA_Y, AGENCIA_Z, 180.0
+        17,
+        AGENCIA_X,
+        AGENCIA_Y,
+        AGENCIA_Z,
+        180.0
     );
 
     TextoAgencia = Create3DTextLabel(
         "AGENCIA DE EMPREGOS\nDigite /empregos",
         COR_CIANO,
-        AGENCIA_X, AGENCIA_Y, AGENCIA_Z + 1.0,
-        15.0, 0, 0
+        AGENCIA_X,
+        AGENCIA_Y,
+        AGENCIA_Z + 1.0,
+        15.0,
+        0,
+        0
     );
 
     return 1;
@@ -105,23 +129,30 @@ public OnPlayerConnect(playerid)
     EntregaVeiculo[playerid] = INVALID_VEHICLE_ID;
     EntregaEtapa[playerid] = 0;
     VeiculoConcessionaria[playerid] = INVALID_VEHICLE_ID;
+    VeiculoDono[playerid] = INVALID_VEHICLE_ID;
 
     TagDono[playerid] = Text3D:INVALID_3DTEXT_ID;
 
-    // Icone da loja de roupas
     SetPlayerMapIcon(
-        playerid, 10,
-        ROUPAS_X, ROUPAS_Y, ROUPAS_Z,
-        45, 0, MAPICON_GLOBAL
+        playerid,
+        10,
+        ROUPAS_X,
+        ROUPAS_Y,
+        ROUPAS_Z,
+        45,
+        0,
+        MAPICON_GLOBAL
     );
 
-    // Icone de veiculo para a concessionaria
     SetPlayerMapIcon(
-        playerid, 11,
+        playerid,
+        11,
         CONCESSIONARIA_X,
         CONCESSIONARIA_Y,
         CONCESSIONARIA_Z,
-        55, 0, MAPICON_GLOBAL
+        55,
+        0,
+        MAPICON_GLOBAL
     );
 
     if (EhDono(playerid))
@@ -129,24 +160,40 @@ public OnPlayerConnect(playerid)
         TagDono[playerid] = Create3DTextLabel(
             "{FFD700}[DONO]\n{FFFFFF}Fhzk",
             COR_DOURADO,
-            0.0, 0.0, 0.0,
-            30.0, 0, 1
+            0.0,
+            0.0,
+            0.0,
+            30.0,
+            0,
+            1
         );
 
         Attach3DTextLabelToPlayer(
-            TagDono[playerid], playerid,
-            0.0, 0.0, 0.45
+            TagDono[playerid],
+            playerid,
+            0.0,
+            0.0,
+            0.45
         );
 
-        SendClientMessage(playerid, COR_DOURADO,
-            "Voce e o proprietario da ZIKA RP!");
+        SendClientMessage(
+            playerid,
+            COR_DOURADO,
+            "Voce e o proprietario da ZIKA RP!"
+        );
 
-        SendClientMessage(playerid, COR_BRANCO,
-            "Use /dono para acessar seu painel.");
+        SendClientMessage(
+            playerid,
+            COR_BRANCO,
+            "Use /dono para acessar seu painel."
+        );
     }
 
-    SendClientMessage(playerid, COR_CIANO,
-        "Bem-vindo a ZIKA RP!");
+    SendClientMessage(
+        playerid,
+        COR_CIANO,
+        "Bem-vindo a ZIKA RP!"
+    );
 
     return 1;
 }
@@ -160,32 +207,47 @@ public OnPlayerSpawn(playerid)
         SetPlayerColor(playerid, COR_DOURADO);
     }
 
-    SendClientMessage(playerid, COR_CIANO,
-        "Divirta-se na cidade ZIKA RP!");
+    SendClientMessage(
+        playerid,
+        COR_CIANO,
+        "Divirta-se na cidade ZIKA RP!"
+    );
 
     return 1;
 }
 
-// GPS das entregas
+// GPS DAS ENTREGAS
 stock AtualizarRotaEntrega(playerid)
 {
     if (EntregaEtapa[playerid] == 0)
     {
-        SetPlayerRaceCheckpoint(playerid, 0,
+        SetPlayerRaceCheckpoint(
+            playerid,
+            0,
             1833.0, -1842.0, 13.5,
-            2495.0, -1687.0, 13.5, 5.0);
+            2495.0, -1687.0, 13.5,
+            5.0
+        );
     }
     else if (EntregaEtapa[playerid] == 1)
     {
-        SetPlayerRaceCheckpoint(playerid, 0,
+        SetPlayerRaceCheckpoint(
+            playerid,
+            0,
             2495.0, -1687.0, 13.5,
-            1368.0, -1279.0, 13.5, 5.0);
+            1368.0, -1279.0, 13.5,
+            5.0
+        );
     }
     else
     {
-        SetPlayerRaceCheckpoint(playerid, 0,
+        SetPlayerRaceCheckpoint(
+            playerid,
+            0,
             1368.0, -1279.0, 13.5,
-            1833.0, -1842.0, 13.5, 5.0);
+            1833.0, -1842.0, 13.5,
+            5.0
+        );
     }
 
     return 1;
@@ -197,8 +259,11 @@ stock IniciarEntrega(playerid)
 
     if (TrabalhandoEntrega[playerid])
     {
-        SendClientMessage(playerid, COR_VERMELHO,
-            "Voce ja esta trabalhando.");
+        SendClientMessage(
+            playerid,
+            COR_VERMELHO,
+            "Voce ja esta trabalhando."
+        );
         return 1;
     }
 
@@ -209,12 +274,22 @@ stock IniciarEntrega(playerid)
         448,
         x + (2.5 * floatsin(-angulo, degrees)),
         y + (2.5 * floatcos(-angulo, degrees)),
-        z, angulo, -1, -1, -1
+        z,
+        angulo,
+        -1,
+        -1,
+        -1
     );
 
     if (EntregaVeiculo[playerid] == INVALID_VEHICLE_ID)
-        return SendClientMessage(playerid, COR_VERMELHO,
-            "Nao foi possivel criar a moto.");
+    {
+        SendClientMessage(
+            playerid,
+            COR_VERMELHO,
+            "Nao foi possivel criar a moto."
+        );
+        return 1;
+    }
 
     SkinOriginal[playerid] = GetPlayerSkin(playerid);
     SetPlayerSkin(playerid, 155);
@@ -222,11 +297,19 @@ stock IniciarEntrega(playerid)
     TrabalhandoEntrega[playerid] = true;
     EntregaEtapa[playerid] = 0;
 
-    PutPlayerInVehicle(playerid, EntregaVeiculo[playerid], 0);
+    PutPlayerInVehicle(
+        playerid,
+        EntregaVeiculo[playerid],
+        0
+    );
+
     AtualizarRotaEntrega(playerid);
 
-    SendClientMessage(playerid, COR_VERDE,
-        "Emprego iniciado! Cada entrega paga $250.");
+    SendClientMessage(
+        playerid,
+        COR_VERDE,
+        "Emprego iniciado! Cada entrega paga $250."
+    );
 
     return 1;
 }
@@ -235,18 +318,25 @@ stock PararEntrega(playerid)
 {
     if (!TrabalhandoEntrega[playerid])
     {
-        SendClientMessage(playerid, COR_VERMELHO,
-            "Voce nao esta trabalhando.");
+        SendClientMessage(
+            playerid,
+            COR_VERMELHO,
+            "Voce nao esta trabalhando."
+        );
         return 1;
     }
 
     DisablePlayerRaceCheckpoint(playerid);
 
     if (GetPlayerVehicleID(playerid) == EntregaVeiculo[playerid])
+    {
         RemovePlayerFromVehicle(playerid);
+    }
 
     if (EntregaVeiculo[playerid] != INVALID_VEHICLE_ID)
+    {
         DestroyVehicle(EntregaVeiculo[playerid]);
+    }
 
     SetPlayerSkin(playerid, SkinOriginal[playerid]);
 
@@ -254,8 +344,11 @@ stock PararEntrega(playerid)
     TrabalhandoEntrega[playerid] = false;
     EntregaEtapa[playerid] = 0;
 
-    SendClientMessage(playerid, COR_CIANO,
-        "Expediente encerrado!");
+    SendClientMessage(
+        playerid,
+        COR_CIANO,
+        "Expediente encerrado!"
+    );
 
     return 1;
 }
@@ -270,26 +363,33 @@ public OnPlayerEnterRaceCheckpoint(playerid)
 
     GivePlayerMoney(playerid, PAGAMENTO_ENTREGA);
 
-    SendClientMessage(playerid, COR_VERDE,
-        "Entrega concluida! Voce recebeu $250.");
+    SendClientMessage(
+        playerid,
+        COR_VERDE,
+        "Entrega concluida! Voce recebeu $250."
+    );
 
     EntregaEtapa[playerid]++;
 
     if (EntregaEtapa[playerid] >= 3)
+    {
         EntregaEtapa[playerid] = 0;
+    }
 
     AtualizarRotaEntrega(playerid);
 
     return 1;
 }
 
-// Dialogos
+// DIALOGOS
 public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 {
     if (dialogid == DIALOG_EMPREGO)
     {
         if (response && listitem == 0)
+        {
             IniciarEntrega(playerid);
+        }
 
         return 1;
     }
@@ -301,18 +401,27 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         if (!response)
             return 1;
 
+        if (listitem < 0 || listitem > 4)
+            return 1;
+
         if (GetPlayerMoney(playerid) < PRECO_ROUPA)
         {
-            SendClientMessage(playerid, COR_VERMELHO,
-                "Dinheiro insuficiente.");
+            SendClientMessage(
+                playerid,
+                COR_VERMELHO,
+                "Dinheiro insuficiente."
+            );
             return 1;
         }
 
         GivePlayerMoney(playerid, -PRECO_ROUPA);
         SetPlayerSkin(playerid, skins[listitem]);
 
-        SendClientMessage(playerid, COR_VERDE,
-            "Roupa comprada por $500!");
+        SendClientMessage(
+            playerid,
+            COR_VERDE,
+            "Roupa comprada por $500!"
+        );
 
         return 1;
     }
@@ -325,10 +434,16 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         if (!response)
             return 1;
 
+        if (listitem < 0 || listitem > 4)
+            return 1;
+
         if (GetPlayerMoney(playerid) < precos[listitem])
         {
-            SendClientMessage(playerid, COR_VERMELHO,
-                "Dinheiro insuficiente.");
+            SendClientMessage(
+                playerid,
+                COR_VERMELHO,
+                "Dinheiro insuficiente."
+            );
             return 1;
         }
 
@@ -345,28 +460,40 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
             CONCESSIONARIA_X + 5.0,
             CONCESSIONARIA_Y,
             CONCESSIONARIA_Z,
-            90.0, -1, -1, -1
+            90.0,
+            -1,
+            -1,
+            -1
         );
 
         if (VeiculoConcessionaria[playerid] == INVALID_VEHICLE_ID)
         {
             GivePlayerMoney(playerid, precos[listitem]);
 
-            SendClientMessage(playerid, COR_VERMELHO,
-                "Erro ao criar veiculo. Dinheiro devolvido.");
+            SendClientMessage(
+                playerid,
+                COR_VERMELHO,
+                "Erro ao criar veiculo. Dinheiro devolvido."
+            );
             return 1;
         }
 
-        PutPlayerInVehicle(playerid,
-            VeiculoConcessionaria[playerid], 0);
+        PutPlayerInVehicle(
+            playerid,
+            VeiculoConcessionaria[playerid],
+            0
+        );
 
-        SendClientMessage(playerid, COR_VERDE,
-            "Veiculo comprado com sucesso!");
+        SendClientMessage(
+            playerid,
+            COR_VERDE,
+            "Veiculo comprado com sucesso!"
+        );
 
         return 1;
     }
 
-    // Autenticacao do proprietario
+    // LOGIN DO PROPRIETARIO
     if (dialogid == DIALOG_DONO_LOGIN)
     {
         if (!response)
@@ -377,8 +504,11 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 
         if (strcmp(inputtext, SENHA_DONO, false) != 0)
         {
-            SendClientMessage(playerid, COR_VERMELHO,
-                "Senha incorreta!");
+            SendClientMessage(
+                playerid,
+                COR_VERMELHO,
+                "Senha incorreta!"
+            );
 
             AdminAutenticado[playerid] = false;
             return 1;
@@ -386,94 +516,137 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 
         AdminAutenticado[playerid] = true;
 
-        SendClientMessage(playerid, COR_DOURADO,
-            "Acesso de proprietario autorizado!");
-
-        ShowPlayerDialog(
+        SendClientMessage(
             playerid,
-            DIALOG_DONO_PAINEL,
-            DIALOG_STYLE_LIST,
-            "PAINEL DO PROPRIETARIO - ZIKA RP",
-            "Equipar skin exclusiva\nReceber $100.000\nRestaurar vida e colete\nReaparecer no spawn",
-            "Selecionar",
-            "Fechar"
+            COR_DOURADO,
+            "Acesso de proprietario autorizado!"
         );
+
+        MostrarPainelDono(playerid);
 
         return 1;
     }
 
-    // Painel do proprietario
-        if (dialogid == DIALOG_DONO_PAINEL)
+    // PAINEL DO PROPRIETARIO
+    if (dialogid == DIALOG_DONO_PAINEL)
     {
-        if (!response) return 1;
-        if (!EhDono(playerid) || !AdminAutenticado[playerid]) return 1;
+        if (!response)
+            return 1;
+
+        if (!EhDono(playerid) || !AdminAutenticado[playerid])
+            return 1;
 
         if (listitem == 0)
         {
             SetPlayerSkin(playerid, SKIN_DONO);
-            SendClientMessage(playerid, COR_DOURADO, "Skin do proprietario equipada.");
+
+            SendClientMessage(
+                playerid,
+                COR_DOURADO,
+                "Skin do proprietario equipada."
+            );
         }
         else if (listitem == 1)
         {
-            ShowPlayerDialog(playerid, DIALOG_DONO_VEICULOS, DIALOG_STYLE_LIST,
+            ShowPlayerDialog(
+                playerid,
+                DIALOG_DONO_VEICULOS,
+                DIALOG_STYLE_LIST,
                 "VEICULOS DO DONO",
                 "Infernus\nNRG-500\nSultan\nTurismo\nMaverick (helicoptero)",
-                "Pegar", "Voltar");
+                "Pegar",
+                "Voltar"
+            );
         }
         else if (listitem == 2)
         {
-            ShowPlayerDialog(playerid, DIALOG_DONO_TELEPORTES, DIALOG_STYLE_LIST,
+            ShowPlayerDialog(
+                playerid,
+                DIALOG_DONO_TELEPORTES,
+                DIALOG_STYLE_LIST,
                 "TELETRANSPORTE",
                 "Centro de Los Santos\nAeroporto\nPraia de Santa Maria\nSan Fierro\nLas Venturas",
-                "Ir", "Voltar");
+                "Ir",
+                "Voltar"
+            );
         }
         else if (listitem == 3)
         {
             if (GetPlayerSpecialAction(playerid) == SPECIAL_ACTION_USEJETPACK)
             {
-                SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
-                SendClientMessage(playerid, COR_CIANO, "Jetpack desativado.");
+                SetPlayerSpecialAction(
+                    playerid,
+                    SPECIAL_ACTION_NONE
+                );
+
+                SendClientMessage(
+                    playerid,
+                    COR_CIANO,
+                    "Jetpack desativado."
+                );
             }
             else
             {
-                SetPlayerSpecialAction(playerid, SPECIAL_ACTION_USEJETPACK);
-                SendClientMessage(playerid, COR_DOURADO, "Jetpack ativado.");
+                SetPlayerSpecialAction(
+                    playerid,
+                    SPECIAL_ACTION_USEJETPACK
+                );
+
+                SendClientMessage(
+                    playerid,
+                    COR_DOURADO,
+                    "Jetpack ativado."
+                );
             }
         }
         else if (listitem == 4)
         {
             GivePlayerMoney(playerid, 100000);
-            SendClientMessage(playerid, COR_VERDE, "Voce recebeu $100.000.");
+
+            SendClientMessage(
+                playerid,
+                COR_VERDE,
+                "Voce recebeu $100.000."
+            );
         }
         else if (listitem == 5)
         {
             SetPlayerHealth(playerid, 100.0);
             SetPlayerArmour(playerid, 100.0);
-            SendClientMessage(playerid, COR_VERDE, "Vida e colete restaurados.");
+
+            SendClientMessage(
+                playerid,
+                COR_VERDE,
+                "Vida e colete restaurados."
+            );
         }
         else if (listitem == 6)
         {
             SpawnPlayer(playerid);
         }
+
         return 1;
     }
+
+    // VEICULOS DO PROPRIETARIO
     if (dialogid == DIALOG_DONO_VEICULOS)
     {
-        if (!EhDono(playerid) || !AdminAutenticado[playerid]) return 1;
+        if (!EhDono(playerid) || !AdminAutenticado[playerid])
+            return 1;
 
         if (!response)
         {
-            ShowPlayerDialog(playerid, DIALOG_DONO_PAINEL, DIALOG_STYLE_LIST,
-                "PAINEL DO PROPRIETARIO - ZIKA RP",
-                "Equipar skin exclusiva\nPegar veiculo\nTeletransportar\nAtivar/desativar jetpack\nReceber $100.000\nRestaurar vida e colete\nReaparecer no spawn",
-                "Selecionar", "Fechar");
+            MostrarPainelDono(playerid);
             return 1;
         }
 
         new modelos[5] = {411, 522, 560, 451, 487};
-        if (listitem < 0 || listitem > 4) return 1;
+
+        if (listitem < 0 || listitem > 4)
+            return 1;
 
         new Float:x, Float:y, Float:z, Float:a;
+
         GetPlayerPos(playerid, x, y, z);
         GetPlayerFacingAngle(playerid, a);
 
@@ -483,32 +656,62 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
             VeiculoDono[playerid] = INVALID_VEHICLE_ID;
         }
 
-        VeiculoDono[playerid] = CreateVehicle(modelos[listitem], x + 3.0, y, z, a, 0, 0, -1);
+        VeiculoDono[playerid] = CreateVehicle(
+            modelos[listitem],
+            x + 3.0,
+            y,
+            z,
+            a,
+            0,
+            0,
+            -1
+        );
 
         if (VeiculoDono[playerid] != INVALID_VEHICLE_ID)
         {
-            PutPlayerInVehicle(playerid, VeiculoDono[playerid], 0);
-            SendClientMessage(playerid, COR_DOURADO, "Veiculo do proprietario criado.");
+            PutPlayerInVehicle(
+                playerid,
+                VeiculoDono[playerid],
+                0
+            );
+
+            SendClientMessage(
+                playerid,
+                COR_DOURADO,
+                "Veiculo do proprietario criado."
+            );
         }
+        else
+        {
+            SendClientMessage(
+                playerid,
+                COR_VERMELHO,
+                "Nao foi possivel criar o veiculo."
+            );
+        }
+
         return 1;
     }
+
+    // TELETRANSPORTE DO PROPRIETARIO
     if (dialogid == DIALOG_DONO_TELEPORTES)
     {
-        if (!EhDono(playerid) || !AdminAutenticado[playerid]) return 1;
+        if (!EhDono(playerid) || !AdminAutenticado[playerid])
+            return 1;
 
         if (!response)
         {
-            ShowPlayerDialog(playerid, DIALOG_DONO_PAINEL, DIALOG_STYLE_LIST,
-                "PAINEL DO PROPRIETARIO - ZIKA RP",
-                "Equipar skin exclusiva\nPegar veiculo\nTeletransportar\nAtivar/desativar jetpack\nReceber $100.000\nRestaurar vida e colete\nReaparecer no spawn",
-                "Selecionar", "Fechar");
+            MostrarPainelDono(playerid);
             return 1;
         }
 
-        if (listitem < 0 || listitem > 4) return 1;
+        if (listitem < 0 || listitem > 4)
+            return 1;
 
         if (IsPlayerInAnyVehicle(playerid))
+        {
             RemovePlayerFromVehicle(playerid);
+        }
 
         SetPlayerInterior(playerid, 0);
         SetPlayerVirtualWorld(playerid, 0);
@@ -522,41 +725,11 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
             case 4: SetPlayerPos(playerid, 1690.0, 1447.0, 10.7);
         }
 
-        SendClientMessage(playerid, COR_DOURADO, "Teletransporte realizado.");
-        return 1;
-    }
-        if (!response)
-            return 1;
-
-        if (!EhDono(playerid) || !AdminAutenticado[playerid])
-            return 1;
-
-        if (listitem == 0)
-        {
-            SetPlayerSkin(playerid, SKIN_DONO);
-
-            SendClientMessage(playerid, COR_DOURADO,
-                "Skin exclusiva do proprietario equipada!");
-        }
-        else if (listitem == 1)
-        {
-            GivePlayerMoney(playerid, 100000);
-
-            SendClientMessage(playerid, COR_VERDE,
-                "Voce recebeu $100.000.");
-        }
-        else if (listitem == 2)
-        {
-            SetPlayerHealth(playerid, 100.0);
-            SetPlayerArmour(playerid, 100.0);
-
-            SendClientMessage(playerid, COR_VERDE,
-                "Vida e colete restaurados!");
-        }
-        else if (listitem == 3)
-        {
-            SpawnPlayer(playerid);
-        }
+        SendClientMessage(
+            playerid,
+            COR_DOURADO,
+            "Teletransporte realizado."
+        );
 
         return 1;
     }
@@ -570,22 +743,17 @@ public OnPlayerCommandText(playerid, cmdtext[])
     {
         if (!EhDono(playerid))
         {
-            SendClientMessage(playerid, COR_VERMELHO,
-                "Voce nao tem permissao.");
+            SendClientMessage(
+                playerid,
+                COR_VERMELHO,
+                "Voce nao tem permissao."
+            );
             return 1;
         }
 
         if (AdminAutenticado[playerid])
         {
-            ShowPlayerDialog(
-                playerid,
-                DIALOG_DONO_PAINEL,
-                DIALOG_STYLE_LIST,
-                "PAINEL DO PROPRIETARIO - ZIKA RP",
-                "Equipar skin exclusiva\nPegar veiculo\nTeletransportar\nAtivar/desativar jetpack\nReceber $100.000\nRestaurar vida e colete\nReaparecer no spawn"
-                "Selecionar",
-                "Fechar"
-            );
+            MostrarPainelDono(playerid);
             return 1;
         }
 
@@ -610,9 +778,12 @@ public OnPlayerCommandText(playerid, cmdtext[])
         GetPlayerPos(playerid, x, y, z);
         GetPlayerFacingAngle(playerid, angulo);
 
-        format(mensagem, sizeof(mensagem),
+        format(
+            mensagem,
+            sizeof(mensagem),
             "POSICAO: X: %.2f | Y: %.2f | Z: %.2f | ANG: %.2f",
-            x, y, z, angulo);
+            x, y, z, angulo
+        );
 
         SendClientMessage(playerid, COR_CIANO, mensagem);
         return 1;
@@ -620,27 +791,40 @@ public OnPlayerCommandText(playerid, cmdtext[])
 
     if (strcmp(cmdtext, "/ajuda", true) == 0)
     {
-        SendClientMessage(playerid, COR_CIANO,
-            "COMANDOS: /empregos /parar /roupas /concessionaria /pos /dono /vida /colete /spawn");
+        SendClientMessage(
+            playerid,
+            COR_CIANO,
+            "COMANDOS: /empregos /parar /roupas /concessionaria /pos /dono /vida /colete /spawn"
+        );
         return 1;
     }
 
     if (strcmp(cmdtext, "/empregos", true) == 0)
     {
-        if (!IsPlayerInRangeOfPoint(playerid, 4.0,
-            AGENCIA_X, AGENCIA_Y, AGENCIA_Z))
+        if (!IsPlayerInRangeOfPoint(
+            playerid,
+            4.0,
+            AGENCIA_X,
+            AGENCIA_Y,
+            AGENCIA_Z
+        ))
         {
-            SendClientMessage(playerid, COR_VERMELHO,
-                "Va ate a agencia de empregos.");
+            SendClientMessage(
+                playerid,
+                COR_VERMELHO,
+                "Va ate a agencia de empregos."
+            );
             return 1;
         }
 
         ShowPlayerDialog(
-            playerid, DIALOG_EMPREGO,
+            playerid,
+            DIALOG_EMPREGO,
             DIALOG_STYLE_LIST,
             "AGENCIA DE EMPREGOS - ZIKA RP",
             "Entregador de delivery",
-            "Trabalhar", "Fechar"
+            "Trabalhar",
+            "Fechar"
         );
 
         return 1;
@@ -648,20 +832,30 @@ public OnPlayerCommandText(playerid, cmdtext[])
 
     if (strcmp(cmdtext, "/roupas", true) == 0)
     {
-        if (!IsPlayerInRangeOfPoint(playerid, 8.0,
-            ROUPAS_X, ROUPAS_Y, ROUPAS_Z))
+        if (!IsPlayerInRangeOfPoint(
+            playerid,
+            8.0,
+            ROUPAS_X,
+            ROUPAS_Y,
+            ROUPAS_Z
+        ))
         {
-            SendClientMessage(playerid, COR_VERMELHO,
-                "Va ate a loja de roupas.");
+            SendClientMessage(
+                playerid,
+                COR_VERMELHO,
+                "Va ate a loja de roupas."
+            );
             return 1;
         }
 
         ShowPlayerDialog(
-            playerid, DIALOG_ROUPAS,
+            playerid,
+            DIALOG_ROUPAS,
             DIALOG_STYLE_LIST,
             "LOJA DE ROUPAS - ZIKA RP",
             "Roupa 1 - $500\nRoupa 2 - $500\nRoupa 3 - $500\nRoupa 4 - $500\nRoupa 5 - $500",
-            "Comprar", "Fechar"
+            "Comprar",
+            "Fechar"
         );
 
         return 1;
@@ -669,43 +863,63 @@ public OnPlayerCommandText(playerid, cmdtext[])
 
     if (strcmp(cmdtext, "/concessionaria", true) == 0)
     {
-        if (!IsPlayerInRangeOfPoint(playerid, 12.0,
+        if (!IsPlayerInRangeOfPoint(
+            playerid,
+            12.0,
             CONCESSIONARIA_X,
             CONCESSIONARIA_Y,
-            CONCESSIONARIA_Z))
+            CONCESSIONARIA_Z
+        ))
         {
-            SendClientMessage(playerid, COR_VERMELHO,
-                "Va ate a concessionaria.");
+            SendClientMessage(
+                playerid,
+                COR_VERMELHO,
+                "Va ate a concessionaria."
+            );
             return 1;
         }
 
         ShowPlayerDialog(
-            playerid, DIALOG_CONCESSIONARIA,
+            playerid,
+            DIALOG_CONCESSIONARIA,
             DIALOG_STYLE_LIST,
             "CONCESSIONARIA - ZIKA RP",
             "Faggio - $1.500\nSanchez - $2.500\nSultan - $8.000\nBullet - $12.000\nLandstalker - $10.000",
-            "Comprar", "Fechar"
+            "Comprar",
+            "Fechar"
         );
 
         return 1;
     }
 
     if (strcmp(cmdtext, "/parar", true) == 0)
+    {
         return PararEntrega(playerid);
+    }
 
     if (strcmp(cmdtext, "/vida", true) == 0)
     {
         SetPlayerHealth(playerid, 100.0);
-        SendClientMessage(playerid, COR_VERDE,
-            "Vida restaurada!");
+
+        SendClientMessage(
+            playerid,
+            COR_VERDE,
+            "Vida restaurada!"
+        );
+
         return 1;
     }
 
     if (strcmp(cmdtext, "/colete", true) == 0)
     {
         SetPlayerArmour(playerid, 100.0);
-        SendClientMessage(playerid, COR_VERDE,
-            "Colete restaurado!");
+
+        SendClientMessage(
+            playerid,
+            COR_VERDE,
+            "Colete restaurado!"
+        );
+
         return 1;
     }
 
@@ -723,17 +937,24 @@ public OnPlayerDisconnect(playerid, reason)
     DisablePlayerRaceCheckpoint(playerid);
 
     if (EntregaVeiculo[playerid] != INVALID_VEHICLE_ID)
+    {
         DestroyVehicle(EntregaVeiculo[playerid]);
+    }
 
     if (VeiculoConcessionaria[playerid] != INVALID_VEHICLE_ID)
+    {
         DestroyVehicle(VeiculoConcessionaria[playerid]);
-if (VeiculoDono[playerid] != INVALID_VEHICLE_ID)
-{
-    DestroyVehicle(VeiculoDono[playerid]);
-    VeiculoDono[playerid] = INVALID_VEHICLE_ID;
-}
+    }
+
+    if (VeiculoDono[playerid] != INVALID_VEHICLE_ID)
+    {
+        DestroyVehicle(VeiculoDono[playerid]);
+    }
+
     if (TagDono[playerid] != Text3D:INVALID_3DTEXT_ID)
+    {
         Delete3DTextLabel(TagDono[playerid]);
+    }
 
     TrabalhandoEntrega[playerid] = false;
     AdminAutenticado[playerid] = false;
