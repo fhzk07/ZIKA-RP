@@ -70,7 +70,7 @@ stock VerificarSenha(playerid, const senha[])
 
     if (!handle) return 0;
 
-    fread(handle, hashSalvo, sizeof(hashSalvo));
+    fread(handle, hashSalvo);
     fclose(handle);
 
     SHA256_PassHash(senha, nome, hash, sizeof(hash));
