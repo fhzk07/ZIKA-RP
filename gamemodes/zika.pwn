@@ -1,11 +1,11 @@
 
-#include <a_samp>
+#include <open.mp>
 
 main()
 {
     print("================================");
-    print("       ZIKA RP INICIANDO");
-    print("    Cidade Brasileira RP");
+    print("          ZIKA RP");
+    print("     CIDADE BRASILEIRA");
     print("================================");
 }
 
@@ -20,7 +20,7 @@ public OnGameModeInit()
         0, 0, 0, 0, 0, 0
     );
 
-    print("[ZIKA RP] Cidade iniciada!");
+    print("[ZIKA RP] Servidor iniciado!");
 
     return 1;
 }
@@ -35,3 +35,4 @@ public OnPlayerConnect(playerid)
 
     return 1;
 }
+
