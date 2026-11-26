@@ -123,7 +123,7 @@ stock PararEntrega(playerid)
     if (GetPlayerVehicleID(playerid) == EntregaVeiculo[playerid])
         RemovePlayerFromVehicle(playerid);
 
-    if (IsValidVehicle(EntregaVeiculo[playerid]))
+if (EntregaVeiculo[playerid] != INVALID_VEHICLE_ID)
         DestroyVehicle(EntregaVeiculo[playerid]);
 
     EntregaVeiculo[playerid] = INVALID_VEHICLE_ID;
@@ -221,7 +221,7 @@ public OnPlayerDisconnect(playerid, reason)
 {
     DisablePlayerCheckpoint(playerid);
 
-    if (IsValidVehicle(EntregaVeiculo[playerid]))
+if (EntregaVeiculo[playerid] != INVALID_VEHICLE_ID)
         DestroyVehicle(EntregaVeiculo[playerid]);
 
     TrabalhandoEntrega[playerid] = false;
