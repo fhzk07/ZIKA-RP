@@ -1,104 +1,27 @@
 
 #include <a_samp>
 
-#define DIALOG_REGISTRO 1000
-#define DIALOG_LOGIN 1001
+#define COR_VERDE 0x00FF00FF
+#define COR_CIANO 0x00E5FFFF
+#define COR_VERMELHO 0xFF3333FF
+#define PAGAMENTO_ENTREGA 250
 
-new bool:Logado[MAX_PLAYERS];
-new Tentativas[MAX_PLAYERS];
 new Text:ZikaLogo;
-
-stock MostrarRegistro(playerid)
-{
-    new nome[MAX_PLAYER_NAME], titulo[80];
-
-    GetPlayerName(playerid, nome, sizeof(nome));
-    format(titulo, sizeof(titulo), "ZIKA RP - Cadastro: %s", nome);
-
-    ShowPlayerDialog(playerid, DIALOG_REGISTRO,
-        DIALOG_STYLE_PASSWORD,
-        titulo,
-        "Bem-vindo a ZIKA RP!\nCrie uma senha para sua conta:",
-        "Cadastrar", "Sair");
-    return 1;
-}
-
-stock MostrarLogin(playerid)
-{
-    ShowPlayerDialog(playerid, DIALOG_LOGIN,
-        DIALOG_STYLE_PASSWORD,
-        "ZIKA RP - Login",
-        "Sua conta ja existe!\nDigite sua senha para entrar:",
-        "Entrar", "Sair");
-    return 1;
-}
-
-stock SalvarConta(playerid, senha[])
-{
-    new nome[MAX_PLAYER_NAME];
-    new arquivo[64];
-    new hash[65];
-    new File:handle;
-
-    GetPlayerName(playerid, nome, sizeof(nome));
-    format(arquivo, sizeof(arquivo), "%s.ini", nome);
-
-    SHA256_PassHash(senha, nome, hash, sizeof(hash));
-
-    handle = fopen(arquivo, io_write);
-
-    if (!handle) return 0;
-
-    fwrite(handle, hash);
-    fclose(handle);
-
-    return 1;
-}
-
-stock VerificarSenha(playerid, senha[])
-{
-    new nome[MAX_PLAYER_NAME];
-    new arquivo[64];
-    new hash[65];
-    new hashSalvo[65];
-    new File:handle;
-
-    GetPlayerName(playerid, nome, sizeof(nome));
-    format(arquivo, sizeof(arquivo), "%s.ini", nome);
-
-    handle = fopen(arquivo, io_read);
-
-    if (!handle) return 0;
-
-    fread(handle, hashSalvo);
-    fclose(handle);
-
-    SHA256_PassHash(senha, nome, hash, sizeof(hash));
-
-    if (strcmp(hash, hashSalvo, false) == 0)
-        return 1;
-
-    return 0;
-}
+new bool:TrabalhandoEntrega[MAX_PLAYERS];
+new EntregaVeiculo[MAX_PLAYERS];
+new EntregaEtapa[MAX_PLAYERS];
 
 main()
 {
-    print("================================");
-    print("          ZIKA ROLEPLAY");
-    print("       Servidor iniciado!");
-    print("================================");
+    print("ZIKA RP - Servidor iniciado!");
 }
 
 public OnGameModeInit()
 {
     SetGameModeText("ZIKA RP - Mobile");
 
-    AddPlayerClass(
-        0,
-        1481.0, -1771.0, 18.8,
-        90.0,
-        0, 0, 0, 0, 0, 0
-    );
+    AddPlayerClass(0, 1481.0, -1771.0, 18.8, 90.0,
+        0, 0, 0, 0, 0, 0);
 
     ShowPlayerMarkers(PLAYER_MARKERS_MODE_GLOBAL);
     ShowNameTags(true);
@@ -108,157 +31,171 @@ public OnGameModeInit()
     ZikaLogo = TextDrawCreate(320.0, 12.0, "ZIKA RP");
     TextDrawAlignment(ZikaLogo, 2);
     TextDrawLetterSize(ZikaLogo, 0.50, 1.80);
-    TextDrawColor(ZikaLogo, 0x00E5FFFF);
+    TextDrawColor(ZikaLogo, COR_CIANO);
     TextDrawSetOutline(ZikaLogo, 2);
     TextDrawSetShadow(ZikaLogo, 1);
     TextDrawFont(ZikaLogo, 2);
     TextDrawSetProportional(ZikaLogo, 1);
     TextDrawSetSelectable(ZikaLogo, 0);
 
-    print("[ZIKA RP] Sistema carregado!");
-
     return 1;
 }
 
 public OnPlayerConnect(playerid)
 {
-    new nome[MAX_PLAYER_NAME];
-    new arquivo[64];
+    TrabalhandoEntrega[playerid] = false;
+    EntregaVeiculo[playerid] = INVALID_VEHICLE_ID;
+    EntregaEtapa[playerid] = 0;
 
-    Logado[playerid] = false;
-    Tentativas[playerid] = 0;
-
-    GetPlayerName(playerid, nome, sizeof(nome));
-    format(arquivo, sizeof(arquivo), "%s.ini", nome);
-
-    TogglePlayerSpectating(playerid, true);
-
-    if (fexist(arquivo))
-    {
-        MostrarLogin(playerid);
-    }
-    else
-    {
-        MostrarRegistro(playerid);
-    }
-
-    SendClientMessage(playerid, 0x00E5FFFF,
+    SendClientMessage(playerid, COR_CIANO,
         "Bem-vindo a ZIKA RP!");
+    SendClientMessage(playerid, 0xFFFFFFFF,
+        "Digite /empregos para conhecer os trabalhos.");
 
     return 1;
 }
 
-public OnDialogResponse(playerid, dialogid, response,
-    listitem, inputtext[])
-{
-    if (dialogid == DIALOG_REGISTRO)
-    {
-        if (!response)
-        {
-            Kick(playerid);
-            return 1;
-        }
-
-        if (strlen(inputtext) < 4)
-        {
-            SendClientMessage(playerid, 0xFF0000FF,
-                "A senha precisa ter pelo menos 4 caracteres.");
-            MostrarRegistro(playerid);
-            return 1;
-        }
-
-        if (!SalvarConta(playerid, inputtext))
-        {
-            SendClientMessage(playerid, 0xFF0000FF,
-                "Erro ao salvar sua conta.");
-            Kick(playerid);
-            return 1;
-        }
-
-        SendClientMessage(playerid, 0x00FF00FF,
-            "Conta criada com sucesso!");
-
-        Logado[playerid] = true;
-        TogglePlayerSpectating(playerid, false);
-        SpawnPlayer(playerid);
-
-        return 1;
-    }
-
-    if (dialogid == DIALOG_LOGIN)
-    {
-        if (!response)
-        {
-            Kick(playerid);
-            return 1;
-        }
-
-        if (VerificarSenha(playerid, inputtext))
-        {
-            Logado[playerid] = true;
-
-            SendClientMessage(playerid, 0x00FF00FF,
-                "Login realizado com sucesso!");
-
-            TogglePlayerSpectating(playerid, false);
-            SpawnPlayer(playerid);
-        }
-        else
-        {
-            Tentativas[playerid]++;
-
-            if (Tentativas[playerid] >= 3)
-            {
-                SendClientMessage(playerid, 0xFF0000FF,
-                    "Muitas senhas incorretas.");
-                Kick(playerid);
-            }
-            else
-            {
-                SendClientMessage(playerid, 0xFF0000FF,
-                    "Senha incorreta! Tente novamente.");
-                MostrarLogin(playerid);
-            }
-        }
-
-        return 1;
-    }
-
-    return 0;
-}
-
 public OnPlayerSpawn(playerid)
 {
-    if (!Logado[playerid])
+    TextDrawShowForPlayer(playerid, ZikaLogo);
+    SendClientMessage(playerid, COR_CIANO,
+        "Divirta-se na cidade ZIKA RP!");
+    return 1;
+}
+
+stock IniciarEntrega(playerid)
+{
+    new Float:x, Float:y, Float:z, Float:angulo;
+
+    if (TrabalhandoEntrega[playerid])
     {
-        TogglePlayerSpectating(playerid, true);
+        SendClientMessage(playerid, COR_VERMELHO,
+            "Voce ja esta trabalhando como entregador.");
         return 1;
     }
 
-    TextDrawShowForPlayer(playerid, ZikaLogo);
+    GetPlayerPos(playerid, x, y, z);
+    GetPlayerFacingAngle(playerid, angulo);
 
-    SendClientMessage(playerid, 0x00FFFFFF,
-        "Divirta-se na cidade ZIKA RP!");
+    EntregaVeiculo[playerid] = CreateVehicle(
+        448,
+        x + (2.5 * floatsin(-angulo, degrees)),
+        y + (2.5 * floatcos(-angulo, degrees)),
+        z,
+        angulo,
+        -1, -1, -1
+    );
+
+    if (EntregaVeiculo[playerid] == INVALID_VEHICLE_ID)
+    {
+        SendClientMessage(playerid, COR_VERMELHO,
+            "Nao foi possivel criar a moto.");
+        return 1;
+    }
+
+    TrabalhandoEntrega[playerid] = true;
+    EntregaEtapa[playerid] = 0;
+
+    PutPlayerInVehicle(playerid, EntregaVeiculo[playerid], 0);
+
+    SetPlayerCheckpoint(playerid,
+        1833.0, -1842.0, 13.5, 5.0);
+
+    SendClientMessage(playerid, COR_VERDE,
+        "Emprego iniciado! Voce recebeu uma moto.");
+    SendClientMessage(playerid, COR_CIANO,
+        "Siga o checkpoint. Cada entrega paga $250.");
+
+    return 1;
+}
+
+stock PararEntrega(playerid)
+{
+    if (!TrabalhandoEntrega[playerid])
+    {
+        SendClientMessage(playerid, COR_VERMELHO,
+            "Voce nao esta trabalhando.");
+        return 1;
+    }
+
+    DisablePlayerCheckpoint(playerid);
+
+    if (GetPlayerVehicleID(playerid) == EntregaVeiculo[playerid])
+        RemovePlayerFromVehicle(playerid);
+
+    if (IsValidVehicle(EntregaVeiculo[playerid]))
+        DestroyVehicle(EntregaVeiculo[playerid]);
+
+    EntregaVeiculo[playerid] = INVALID_VEHICLE_ID;
+    TrabalhandoEntrega[playerid] = false;
+    EntregaEtapa[playerid] = 0;
+
+    SendClientMessage(playerid, COR_CIANO,
+        "Expediente encerrado!");
+
+    return 1;
+}
+
+public OnPlayerEnterCheckpoint(playerid)
+{
+    if (!TrabalhandoEntrega[playerid])
+        return 1;
+
+    if (GetPlayerVehicleID(playerid) != EntregaVeiculo[playerid])
+    {
+        SendClientMessage(playerid, COR_VERMELHO,
+            "Voce precisa estar na moto de entrega.");
+        return 1;
+    }
+
+    GivePlayerMoney(playerid, PAGAMENTO_ENTREGA);
+
+    SendClientMessage(playerid, COR_VERDE,
+        "Entrega concluida! Voce recebeu $250.");
+
+    EntregaEtapa[playerid]++;
+
+    if (EntregaEtapa[playerid] == 1)
+        SetPlayerCheckpoint(playerid, 2495.0, -1687.0, 13.5, 5.0);
+    else if (EntregaEtapa[playerid] == 2)
+        SetPlayerCheckpoint(playerid, 1368.0, -1279.0, 13.5, 5.0);
+    else
+    {
+        EntregaEtapa[playerid] = 0;
+        SetPlayerCheckpoint(playerid, 1833.0, -1842.0, 13.5, 5.0);
+    }
 
     return 1;
 }
 
 public OnPlayerCommandText(playerid, cmdtext[])
 {
-    if (!Logado[playerid])
-        return 1;
-
     if (strcmp(cmdtext, "/ajuda", true) == 0)
     {
-        SendClientMessage(playerid, 0xFFFF00FF,
-            "COMANDOS: /vida /colete /spawn");
+        SendClientMessage(playerid, COR_CIANO,
+            "COMANDOS: /empregos /entregador /parar /vida /colete /spawn");
         return 1;
     }
+
+    if (strcmp(cmdtext, "/empregos", true) == 0)
+    {
+        SendClientMessage(playerid, COR_CIANO,
+            "===== EMPREGOS ZIKA RP =====");
+        SendClientMessage(playerid, 0xFFFFFFFF,
+            "Entregador: digite /entregador.");
+        return 1;
+    }
+
+    if (strcmp(cmdtext, "/entregador", true) == 0)
+        return IniciarEntrega(playerid);
+
+    if (strcmp(cmdtext, "/parar", true) == 0)
+        return PararEntrega(playerid);
 
     if (strcmp(cmdtext, "/vida", true) == 0)
     {
         SetPlayerHealth(playerid, 100.0);
-        SendClientMessage(playerid, 0x00FF00FF,
+        SendClientMessage(playerid, COR_VERDE,
             "Sua vida foi restaurada!");
         return 1;
     }
@@ -266,7 +203,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
     if (strcmp(cmdtext, "/colete", true) == 0)
     {
         SetPlayerArmour(playerid, 100.0);
-        SendClientMessage(playerid, 0x00FF00FF,
+        SendClientMessage(playerid, COR_VERDE,
             "Colete completo!");
         return 1;
     }
@@ -282,7 +219,14 @@ public OnPlayerCommandText(playerid, cmdtext[])
 
 public OnPlayerDisconnect(playerid, reason)
 {
-    Logado[playerid] = false;
-    Tentativas[playerid] = 0;
+    DisablePlayerCheckpoint(playerid);
+
+    if (IsValidVehicle(EntregaVeiculo[playerid]))
+        DestroyVehicle(EntregaVeiculo[playerid]);
+
+    TrabalhandoEntrega[playerid] = false;
+    EntregaVeiculo[playerid] = INVALID_VEHICLE_ID;
+    EntregaEtapa[playerid] = 0;
+
     return 1;
 }
