@@ -1,15 +1,29 @@
 
 #include <a_samp>
 
-#define COR_VERDE 0x00FF00FF
-#define COR_CIANO 0x00E5FFFF
-#define COR_VERMELHO 0xFF3333FF
+#define COR_VERDE       0x00FF00FF
+#define COR_CIANO       0x00E5FFFF
+#define COR_VERMELHO    0xFF3333FF
+#define COR_BRANCO      0xFFFFFFFF
+
 #define PAGAMENTO_ENTREGA 250
+#define DIALOG_EMPREGO 1000
+#define MOCHILA_OBJETO 19559
+#define SLOT_MOCHILA 1
+
+// Agencia de empregos
+#define AGENCIA_X 1477.5
+#define AGENCIA_Y -1771.0
+#define AGENCIA_Z 18.8
 
 new Text:ZikaLogo;
+new Actor:FuncionarioEmpregos;
+new Text3D:TextoAgencia;
+
 new bool:TrabalhandoEntrega[MAX_PLAYERS];
 new EntregaVeiculo[MAX_PLAYERS];
 new EntregaEtapa[MAX_PLAYERS];
+new SkinOriginal[MAX_PLAYERS];
 
 main()
 {
@@ -28,6 +42,7 @@ public OnGameModeInit()
     SetWorldTime(12);
     SetWeather(1);
 
+    // Logo ZIKA RP
     ZikaLogo = TextDrawCreate(320.0, 12.0, "ZIKA RP");
     TextDrawAlignment(ZikaLogo, 2);
     TextDrawLetterSize(ZikaLogo, 0.50, 1.80);
@@ -37,6 +52,18 @@ public OnGameModeInit()
     TextDrawFont(ZikaLogo, 2);
     TextDrawSetProportional(ZikaLogo, 1);
     TextDrawSetSelectable(ZikaLogo, 0);
+
+    // NPC da agencia de empregos
+    FuncionarioEmpregos = CreateActor(
+        17, AGENCIA_X, AGENCIA_Y, AGENCIA_Z, 180.0
+    );
+
+    TextoAgencia = Create3DTextLabel(
+        "AGENCIA DE EMPREGOS\nDigite /empregos para trabalhar",
+        COR_CIANO,
+        AGENCIA_X, AGENCIA_Y, AGENCIA_Z + 1.0,
+        15.0, 0, 0
+    );
 
     return 1;
 }
@@ -49,8 +76,9 @@ public OnPlayerConnect(playerid)
 
     SendClientMessage(playerid, COR_CIANO,
         "Bem-vindo a ZIKA RP!");
-    SendClientMessage(playerid, 0xFFFFFFFF,
-        "Digite /empregos para conhecer os trabalhos.");
+
+    SendClientMessage(playerid, COR_BRANCO,
+        "Visite a agencia de empregos para trabalhar.");
 
     return 1;
 }
@@ -58,11 +86,45 @@ public OnPlayerConnect(playerid)
 public OnPlayerSpawn(playerid)
 {
     TextDrawShowForPlayer(playerid, ZikaLogo);
+
     SendClientMessage(playerid, COR_CIANO,
         "Divirta-se na cidade ZIKA RP!");
+
     return 1;
 }
 
+// Atualiza o destino e a seta do GPS
+stock AtualizarRotaEntrega(playerid)
+{
+    if (EntregaEtapa[playerid] == 0)
+    {
+        SetPlayerRaceCheckpoint(playerid, 0,
+            1833.0, -1842.0, 13.5,
+            2495.0, -1687.0, 13.5,
+            5.0
+        );
+    }
+    else if (EntregaEtapa[playerid] == 1)
+    {
+        SetPlayerRaceCheckpoint(playerid, 0,
+            2495.0, -1687.0, 13.5,
+            1368.0, -1279.0, 13.5,
+            5.0
+        );
+    }
+    else
+    {
+        SetPlayerRaceCheckpoint(playerid, 0,
+            1368.0, -1279.0, 13.5,
+            1833.0, -1842.0, 13.5,
+            5.0
+        );
+    }
+
+    return 1;
+}
+
+// Iniciar emprego
 stock IniciarEntrega(playerid)
 {
     new Float:x, Float:y, Float:z, Float:angulo;
@@ -93,22 +155,42 @@ stock IniciarEntrega(playerid)
         return 1;
     }
 
+    SkinOriginal[playerid] = GetPlayerSkin(playerid);
+
+    // Uniforme de entregador
+    SetPlayerSkin(playerid, 155);
+
+    // Mochila nas costas
+    SetPlayerAttachedObject(
+        playerid,
+        SLOT_MOCHILA,
+        MOCHILA_OBJETO,
+        1,
+        0.0, -0.12, 0.0,
+        0.0, 0.0, 0.0,
+        1.0, 1.0, 1.0
+    );
+
     TrabalhandoEntrega[playerid] = true;
     EntregaEtapa[playerid] = 0;
 
     PutPlayerInVehicle(playerid, EntregaVeiculo[playerid], 0);
 
-    SetPlayerCheckpoint(playerid,
-        1833.0, -1842.0, 13.5, 5.0);
+    AtualizarRotaEntrega(playerid);
 
     SendClientMessage(playerid, COR_VERDE,
         "Emprego iniciado! Voce recebeu uma moto.");
+
     SendClientMessage(playerid, COR_CIANO,
-        "Siga o checkpoint. Cada entrega paga $250.");
+        "Uniforme e mochila de entregador equipados.");
+
+    SendClientMessage(playerid, COR_BRANCO,
+        "Siga a seta do GPS. Cada entrega paga $250.");
 
     return 1;
 }
 
+// Encerrar emprego
 stock PararEntrega(playerid)
 {
     if (!TrabalhandoEntrega[playerid])
@@ -118,25 +200,34 @@ stock PararEntrega(playerid)
         return 1;
     }
 
-    DisablePlayerCheckpoint(playerid);
+    DisablePlayerRaceCheckpoint(playerid);
 
     if (GetPlayerVehicleID(playerid) == EntregaVeiculo[playerid])
+    {
         RemovePlayerFromVehicle(playerid);
+    }
 
-if (EntregaVeiculo[playerid] != INVALID_VEHICLE_ID)
+    if (EntregaVeiculo[playerid] != INVALID_VEHICLE_ID)
+    {
         DestroyVehicle(EntregaVeiculo[playerid]);
+    }
+
+    RemovePlayerAttachedObject(playerid, SLOT_MOCHILA);
+
+    SetPlayerSkin(playerid, SkinOriginal[playerid]);
 
     EntregaVeiculo[playerid] = INVALID_VEHICLE_ID;
     TrabalhandoEntrega[playerid] = false;
     EntregaEtapa[playerid] = 0;
 
     SendClientMessage(playerid, COR_CIANO,
-        "Expediente encerrado!");
+        "Expediente encerrado! Uniforme devolvido.");
 
     return 1;
 }
 
-public OnPlayerEnterCheckpoint(playerid)
+// Conclusao de entrega
+public OnPlayerEnterRaceCheckpoint(playerid)
 {
     if (!TrabalhandoEntrega[playerid])
         return 1;
@@ -155,17 +246,37 @@ public OnPlayerEnterCheckpoint(playerid)
 
     EntregaEtapa[playerid]++;
 
-    if (EntregaEtapa[playerid] == 1)
-        SetPlayerCheckpoint(playerid, 2495.0, -1687.0, 13.5, 5.0);
-    else if (EntregaEtapa[playerid] == 2)
-        SetPlayerCheckpoint(playerid, 1368.0, -1279.0, 13.5, 5.0);
-    else
+    if (EntregaEtapa[playerid] >= 3)
     {
         EntregaEtapa[playerid] = 0;
-        SetPlayerCheckpoint(playerid, 1833.0, -1842.0, 13.5, 5.0);
     }
 
+    AtualizarRotaEntrega(playerid);
+
+    SendClientMessage(playerid, COR_CIANO,
+        "GPS atualizado! Siga para a proxima entrega.");
+
     return 1;
+}
+
+// Dialogos e comandos
+public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
+{
+    if (dialogid == DIALOG_EMPREGO)
+    {
+        if (!response)
+            return 1;
+
+        if (listitem == 0)
+        {
+            IniciarEntrega(playerid);
+            return 1;
+        }
+
+        return 1;
+    }
+
+    return 0;
 }
 
 public OnPlayerCommandText(playerid, cmdtext[])
@@ -173,24 +284,38 @@ public OnPlayerCommandText(playerid, cmdtext[])
     if (strcmp(cmdtext, "/ajuda", true) == 0)
     {
         SendClientMessage(playerid, COR_CIANO,
-            "COMANDOS: /empregos /entregador /parar /vida /colete /spawn");
+            "COMANDOS: /empregos /parar /vida /colete /spawn");
         return 1;
     }
 
     if (strcmp(cmdtext, "/empregos", true) == 0)
     {
-        SendClientMessage(playerid, COR_CIANO,
-            "===== EMPREGOS ZIKA RP =====");
-        SendClientMessage(playerid, 0xFFFFFFFF,
-            "Entregador: digite /entregador.");
+        if (!IsPlayerInRangeOfPoint(
+            playerid, 4.0,
+            AGENCIA_X, AGENCIA_Y, AGENCIA_Z))
+        {
+            SendClientMessage(playerid, COR_VERMELHO,
+                "Va ate a agencia de empregos primeiro.");
+            return 1;
+        }
+
+        ShowPlayerDialog(
+            playerid,
+            DIALOG_EMPREGO,
+            DIALOG_STYLE_LIST,
+            "AGENCIA DE EMPREGOS - ZIKA RP",
+            "Entregador de delivery",
+            "Trabalhar",
+            "Fechar"
+        );
+
         return 1;
     }
 
-    if (strcmp(cmdtext, "/entregador", true) == 0)
-        return IniciarEntrega(playerid);
-
     if (strcmp(cmdtext, "/parar", true) == 0)
+    {
         return PararEntrega(playerid);
+    }
 
     if (strcmp(cmdtext, "/vida", true) == 0)
     {
@@ -219,10 +344,12 @@ public OnPlayerCommandText(playerid, cmdtext[])
 
 public OnPlayerDisconnect(playerid, reason)
 {
-    DisablePlayerCheckpoint(playerid);
+    DisablePlayerRaceCheckpoint(playerid);
 
-if (EntregaVeiculo[playerid] != INVALID_VEHICLE_ID)
+    if (EntregaVeiculo[playerid] != INVALID_VEHICLE_ID)
+    {
         DestroyVehicle(EntregaVeiculo[playerid]);
+    }
 
     TrabalhandoEntrega[playerid] = false;
     EntregaVeiculo[playerid] = INVALID_VEHICLE_ID;
