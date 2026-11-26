@@ -17,6 +17,8 @@
 #define DIALOG_CONCESSIONARIA 1002
 #define DIALOG_DONO_LOGIN 1003
 #define DIALOG_DONO_PAINEL 1004
+#define DIALOG_DONO_VEICULOS 1005
+#define DIALOG_DONO_TELEPORTES 1006
 
 #define AGENCIA_X 1477.5
 #define AGENCIA_Y -1771.0
@@ -44,6 +46,7 @@ new EntregaVeiculo[MAX_PLAYERS];
 new EntregaEtapa[MAX_PLAYERS];
 new SkinOriginal[MAX_PLAYERS];
 new VeiculoConcessionaria[MAX_PLAYERS];
+new VeiculoDono[MAX_PLAYERS];
 
 main()
 {
@@ -400,8 +403,128 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
     }
 
     // Painel do proprietario
-    if (dialogid == DIALOG_DONO_PAINEL)
+        if (dialogid == DIALOG_DONO_PAINEL)
     {
+        if (!response) return 1;
+        if (!EhDono(playerid) || !AdminAutenticado[playerid]) return 1;
+
+        if (listitem == 0)
+        {
+            SetPlayerSkin(playerid, SKIN_DONO);
+            SendClientMessage(playerid, COR_DOURADO, "Skin do proprietario equipada.");
+        }
+        else if (listitem == 1)
+        {
+            ShowPlayerDialog(playerid, DIALOG_DONO_VEICULOS, DIALOG_STYLE_LIST,
+                "VEICULOS DO DONO",
+                "Infernus\nNRG-500\nSultan\nTurismo\nMaverick (helicoptero)",
+                "Pegar", "Voltar");
+        }
+        else if (listitem == 2)
+        {
+            ShowPlayerDialog(playerid, DIALOG_DONO_TELEPORTES, DIALOG_STYLE_LIST,
+                "TELETRANSPORTE",
+                "Centro de Los Santos\nAeroporto\nPraia de Santa Maria\nSan Fierro\nLas Venturas",
+                "Ir", "Voltar");
+        }
+        else if (listitem == 3)
+        {
+            if (GetPlayerSpecialAction(playerid) == SPECIAL_ACTION_USEJETPACK)
+            {
+                SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
+                SendClientMessage(playerid, COR_CIANO, "Jetpack desativado.");
+            }
+            else
+            {
+                SetPlayerSpecialAction(playerid, SPECIAL_ACTION_USEJETPACK);
+                SendClientMessage(playerid, COR_DOURADO, "Jetpack ativado.");
+            }
+        }
+        else if (listitem == 4)
+        {
+            GivePlayerMoney(playerid, 100000);
+            SendClientMessage(playerid, COR_VERDE, "Voce recebeu $100.000.");
+        }
+        else if (listitem == 5)
+        {
+            SetPlayerHealth(playerid, 100.0);
+            SetPlayerArmour(playerid, 100.0);
+            SendClientMessage(playerid, COR_VERDE, "Vida e colete restaurados.");
+        }
+        else if (listitem == 6)
+        {
+            SpawnPlayer(playerid);
+        }
+        return 1;
+    }
+    if (dialogid == DIALOG_DONO_VEICULOS)
+    {
+        if (!EhDono(playerid) || !AdminAutenticado[playerid]) return 1;
+
+        if (!response)
+        {
+            ShowPlayerDialog(playerid, DIALOG_DONO_PAINEL, DIALOG_STYLE_LIST,
+                "PAINEL DO PROPRIETARIO - ZIKA RP",
+                "Equipar skin exclusiva\nPegar veiculo\nTeletransportar\nAtivar/desativar jetpack\nReceber $100.000\nRestaurar vida e colete\nReaparecer no spawn",
+                "Selecionar", "Fechar");
+            return 1;
+        }
+
+        new modelos[5] = {411, 522, 560, 451, 487};
+        if (listitem < 0 || listitem > 4) return 1;
+
+        new Float:x, Float:y, Float:z, Float:a;
+        GetPlayerPos(playerid, x, y, z);
+        GetPlayerFacingAngle(playerid, a);
+
+        if (VeiculoDono[playerid] != INVALID_VEHICLE_ID)
+        {
+            DestroyVehicle(VeiculoDono[playerid]);
+            VeiculoDono[playerid] = INVALID_VEHICLE_ID;
+        }
+
+        VeiculoDono[playerid] = CreateVehicle(modelos[listitem], x + 3.0, y, z, a, 0, 0, -1);
+
+        if (VeiculoDono[playerid] != INVALID_VEHICLE_ID)
+        {
+            PutPlayerInVehicle(playerid, VeiculoDono[playerid], 0);
+            SendClientMessage(playerid, COR_DOURADO, "Veiculo do proprietario criado.");
+        }
+        return 1;
+    }
+    if (dialogid == DIALOG_DONO_TELEPORTES)
+    {
+        if (!EhDono(playerid) || !AdminAutenticado[playerid]) return 1;
+
+        if (!response)
+        {
+            ShowPlayerDialog(playerid, DIALOG_DONO_PAINEL, DIALOG_STYLE_LIST,
+                "PAINEL DO PROPRIETARIO - ZIKA RP",
+                "Equipar skin exclusiva\nPegar veiculo\nTeletransportar\nAtivar/desativar jetpack\nReceber $100.000\nRestaurar vida e colete\nReaparecer no spawn",
+                "Selecionar", "Fechar");
+            return 1;
+        }
+
+        if (listitem < 0 || listitem > 4) return 1;
+
+        if (IsPlayerInAnyVehicle(playerid))
+            RemovePlayerFromVehicle(playerid);
+
+        SetPlayerInterior(playerid, 0);
+        SetPlayerVirtualWorld(playerid, 0);
+
+        switch (listitem)
+        {
+            case 0: SetPlayerPos(playerid, 1481.0, -1771.0, 18.8);
+            case 1: SetPlayerPos(playerid, 1958.0, -2185.0, 13.5);
+            case 2: SetPlayerPos(playerid, 342.0, -1808.0, 5.0);
+            case 3: SetPlayerPos(playerid, -1985.0, 137.0, 27.7);
+            case 4: SetPlayerPos(playerid, 1690.0, 1447.0, 10.7);
+        }
+
+        SendClientMessage(playerid, COR_DOURADO, "Teletransporte realizado.");
+        return 1;
+    }
         if (!response)
             return 1;
 
@@ -459,7 +582,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
                 DIALOG_DONO_PAINEL,
                 DIALOG_STYLE_LIST,
                 "PAINEL DO PROPRIETARIO - ZIKA RP",
-                "Equipar skin exclusiva\nReceber $100.000\nRestaurar vida e colete\nReaparecer no spawn",
+                "Equipar skin exclusiva\nPegar veiculo\nTeletransportar\nAtivar/desativar jetpack\nReceber $100.000\nRestaurar vida e colete\nReaparecer no spawn"
                 "Selecionar",
                 "Fechar"
             );
@@ -604,7 +727,11 @@ public OnPlayerDisconnect(playerid, reason)
 
     if (VeiculoConcessionaria[playerid] != INVALID_VEHICLE_ID)
         DestroyVehicle(VeiculoConcessionaria[playerid]);
-
+if (VeiculoDono[playerid] != INVALID_VEHICLE_ID)
+{
+    DestroyVehicle(VeiculoDono[playerid]);
+    VeiculoDono[playerid] = INVALID_VEHICLE_ID;
+}
     if (TagDono[playerid] != Text3D:INVALID_3DTEXT_ID)
         Delete3DTextLabel(TagDono[playerid]);
 
@@ -613,6 +740,7 @@ public OnPlayerDisconnect(playerid, reason)
 
     EntregaVeiculo[playerid] = INVALID_VEHICLE_ID;
     VeiculoConcessionaria[playerid] = INVALID_VEHICLE_ID;
+    VeiculoDono[playerid] = INVALID_VEHICLE_ID;
     EntregaEtapa[playerid] = 0;
 
     return 1;
