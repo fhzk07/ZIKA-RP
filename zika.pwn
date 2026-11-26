@@ -46,6 +46,10 @@ new EntregaEtapa[MAX_PLAYERS];
 new SkinOriginal[MAX_PLAYERS];
 new VeiculoConcessionaria[MAX_PLAYERS];
 new VeiculoDono[MAX_PLAYERS];
+new Float:MarcacaoX[MAX_PLAYERS];
+new Float:MarcacaoY[MAX_PLAYERS];
+new Float:MarcacaoZ[MAX_PLAYERS];
+new bool:TemMarcacao[MAX_PLAYERS];
 
 main()
 {
@@ -206,6 +210,25 @@ public OnPlayerSpawn(playerid)
     {
         SetPlayerColor(playerid, COR_DOURADO);
     }
+public OnPlayerClickMap(playerid, Float:fX, Float:fY, Float:fZ)
+{
+    if (!EhDono(playerid))
+        return 1;
+
+    MarcacaoX[playerid] = fX;
+    MarcacaoY[playerid] = fY;
+    MarcacaoZ[playerid] = fZ;
+
+    TemMarcacao[playerid] = true;
+
+    SendClientMessage(
+        playerid,
+        COR_DOURADO,
+        "Marcacao salva! Use o painel do dono para teleportar."
+    );
+
+    return 1;
+}
 
     SendClientMessage(
         playerid,
