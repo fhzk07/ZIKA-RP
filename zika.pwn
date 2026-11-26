@@ -1,6 +1,8 @@
 
 #include <a_samp>
 
+new Text:ZikaLogo;
+
 main()
 {
     print("================================");
@@ -25,6 +27,17 @@ public OnGameModeInit()
     SetWorldTime(12);
     SetWeather(1);
 
+    // LOGOMARCA ZIKA RP
+    ZikaLogo = TextDrawCreate(320.0, 12.0, "ZIKA RP");
+    TextDrawAlignment(ZikaLogo, 2);
+    TextDrawLetterSize(ZikaLogo, 0.50, 1.80);
+    TextDrawColor(ZikaLogo, 0x00E5FFFF);
+    TextDrawSetOutline(ZikaLogo, 2);
+    TextDrawSetShadow(ZikaLogo, 1);
+    TextDrawFont(ZikaLogo, 2);
+    TextDrawSetProportional(ZikaLogo, 1);
+    TextDrawSetSelectable(ZikaLogo, 0);
+
     print("[ZIKA RP] Gamemode carregado!");
 
     return 1;
@@ -32,6 +45,8 @@ public OnGameModeInit()
 
 public OnPlayerConnect(playerid)
 {
+    TextDrawShowForPlayer(playerid, ZikaLogo);
+
     SendClientMessage(playerid, 0x00FF00FF,
         "Bem-vindo a ZIKA RP!");
 
@@ -43,6 +58,8 @@ public OnPlayerConnect(playerid)
 
 public OnPlayerSpawn(playerid)
 {
+    TextDrawShowForPlayer(playerid, ZikaLogo);
+
     SendClientMessage(playerid, 0x00FFFFFF,
         "Divirta-se na cidade ZIKA RP!");
 
@@ -55,7 +72,6 @@ public OnPlayerCommandText(playerid, cmdtext[])
     {
         SendClientMessage(playerid, 0xFFFF00FF,
             "COMANDOS: /vida /colete /spawn");
-
         return 1;
     }
 
@@ -64,7 +80,6 @@ public OnPlayerCommandText(playerid, cmdtext[])
         SetPlayerHealth(playerid, 100.0);
         SendClientMessage(playerid, 0x00FF00FF,
             "Sua vida foi restaurada!");
-
         return 1;
     }
 
@@ -73,7 +88,6 @@ public OnPlayerCommandText(playerid, cmdtext[])
         SetPlayerArmour(playerid, 100.0);
         SendClientMessage(playerid, 0x00FF00FF,
             "Colete completo!");
-
         return 1;
     }
 
