@@ -7,7 +7,7 @@
 
 #define ZK_SERVIDOR "ZK RP | Mobile Roleplay"
 #define ZK_DONO "Fhzk"
-#define ZK_SENHA_DONO "TROQUE_POR_UMA_SENHA_PRIVADA"
+#define ZK_SENHA_DONO "fhzk333@"
 
 #define COR_BRANCO 0xFFFFFFFF
 #define COR_ROXO 0x9B5CFFFF
@@ -495,3 +495,738 @@ stock CriarVeiculoDono(playerid, modelo)
 
     return 1;
 }
+
+// ============================================================
+// PARTE 3/4 - COMANDOS E SISTEMAS DO JOGADOR
+// ============================================================
+
+stock EntrarNoServidor(playerid)
+{
+    Dados[playerid][Logado] = true;
+
+    SetPlayerScore(playerid, Dados[playerid][Nivel]);
+    GivePlayerMoney(playerid, Dados[playerid][Dinheiro]);
+    SetPlayerSkin(playerid, Dados[playerid][Skin]);
+
+    SetSpawnInfo(playerid, 0, Dados[playerid][Skin],
+        1481.0, -1771.0, 18.8, 90.0,
+        0, 0, 0, 0, 0, 0);
+
+    SpawnPlayer(playerid);
+
+    Mensagem(playerid, COR_VERDE,
+        "Bem-vindo ao ZK RP Mobile!");
+
+    if (EhDono(playerid))
+    {
+        Mensagem(playerid, COR_DOURADO,
+            "[DONO] Voce entrou no servidor.");
+    }
+
+    return 1;
+}
+
+stock AtualizarNecessidades(playerid)
+{
+    if (!Dados[playerid][Logado])
+        return 0;
+
+    if (Dados[playerid][Fome] > 0)
+        Dados[playerid][Fome]--;
+
+    if (Dados[playerid][Sede] > 0)
+        Dados[playerid][Sede]--;
+
+    if (Dados[playerid][Fome] <= 0 ||
+        Dados[playerid][Sede] <= 0)
+    {
+        new Float:vida;
+        GetPlayerHealth(playerid, vida);
+
+        vida -= 5.0;
+
+        if (vida <= 0.0)
+            SetPlayerHealth(playerid, 10.0);
+        else
+            SetPlayerHealth(playerid, vida);
+    }
+
+    return 1;
+}
+
+stock SalvarTodos()
+{
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (Dados[i][Logado])
+            SalvarConta(i);
+    }
+    return 1;
+}
+
+stock MostrarStatus(playerid)
+{
+    format(StringTemporaria, sizeof(StringTemporaria),
+        "{FFFFFF}Personagem: %s\n\
+{FFFFFF}Nivel: %d\n\
+{FFFFFF}Experiencia: %d\n\
+{20D879}Dinheiro: $%d\n\
+{00E5FF}Banco: $%d\n\
+{FFFFFF}Emprego: %s\n\
+{FFFFFF}Fome: %d/100\n\
+{FFFFFF}Sede: %d/100\n\
+{FFFFFF}CNH: %s",
+        Nome[playerid],
+        Dados[playerid][Nivel],
+        Dados[playerid][Experiencia],
+        Dados[playerid][Dinheiro],
+        Dados[playerid][Banco],
+        NomeEmprego(Dados[playerid][Emprego]),
+        Dados[playerid][Fome],
+        Dados[playerid][Sede],
+        Dados[playerid][CNH] ? "Sim" : "Nao");
+
+    ShowPlayerDialog(playerid, DIALOG_STATUS,
+        DIALOG_STYLE_MSGBOX,
+        "{9B5CFF}Meu personagem",
+        StringTemporaria,
+        "Fechar", "");
+    return 1;
+}
+
+// ============================================================
+// COMANDOS
+// ============================================================
+
+public OnPlayerCommandText(playerid, cmdtext[])
+{
+    if (!Dados[playerid][Logado])
+        return 1;
+
+    if (!strcmp(cmdtext, "/menu", true))
+    {
+        AbrirMenu(playerid);
+        return 1;
+    }
+
+    if (!strcmp(cmdtext, "/empregos", true))
+    {
+        AbrirEmpregos(playerid);
+        return 1;
+    }
+
+    if (!strcmp(cmdtext, "/gps", true))
+    {
+        AbrirGPS(playerid);
+        return 1;
+    }
+
+    if (!strcmp(cmdtext, "/banco", true))
+    {
+        AbrirBanco(playerid);
+        return 1;
+    }
+
+    if (!strcmp(cmdtext, "/trabalhar", true))
+    {
+        IniciarTrabalho(playerid);
+        return 1;
+    }
+
+    if (!strcmp(cmdtext, "/finalizar", true))
+    {
+        FinalizarTrabalho(playerid);
+        return 1;
+    }
+
+    if (!strcmp(cmdtext, "/status", true))
+    {
+        MostrarStatus(playerid);
+        return 1;
+    }
+
+    if (!strcmp(cmdtext, "/salvar", true))
+    {
+        SalvarConta(playerid);
+        Mensagem(playerid, COR_VERDE,
+            "Sua conta foi salva.");
+        return 1;
+    }
+
+    if (!strcmp(cmdtext, "/dono", true))
+    {
+        if (!EhDono(playerid))
+        {
+            Mensagem(playerid, COR_VERMELHO,
+                "Comando exclusivo do dono.");
+            return 1;
+        }
+
+        ShowPlayerDialog(playerid, DIALOG_DONO_LOGIN,
+            DIALOG_STYLE_PASSWORD,
+            "{FFD700}[DONO] Acesso administrativo",
+            "Digite a senha administrativa:",
+            "Entrar", "Cancelar");
+        return 1;
+    }
+
+    if (!strcmp(cmdtext, "/comandos", true))
+    {
+        ShowPlayerDialog(playerid, 1013,
+            DIALOG_STYLE_MSGBOX,
+            "{9B5CFF}Comandos ZK RP",
+            "/menu - Menu principal\n\
+/empregos - Central de empregos\n\
+/gps - GPS\n\
+/banco - Banco\n\
+/trabalhar - Iniciar trabalho\n\
+/finalizar - Finalizar trabalho\n\
+/status - Ver personagem\n\
+/dono - Painel administrativo\n\
+/salvar - Salvar conta",
+            "Fechar", "");
+        return 1;
+    }
+
+    return 0;
+}
+
+// ============================================================
+// CALLBACKS PRINCIPAIS
+// ============================================================
+
+public OnGameModeInit()
+{
+    SetGameModeText(ZK_SERVIDOR);
+    ShowPlayerMarkers(PLAYER_MARKERS_MODE_GLOBAL);
+    ShowNameTags(true);
+    SetWeather(10);
+    SetWorldTime(12);
+
+    AddPlayerClass(0, 1481.0, -1771.0, 18.8,
+        90.0, 0, 0, 0, 0, 0, 0);
+
+    InicializarCasas();
+
+    SetTimer("AtualizarTodos", 60000, true);
+
+    print("==================================");
+    print(" ZK RP MOBILE INICIADO");
+    print("==================================");
+
+    return 1;
+}
+
+forward AtualizarTodos();
+public AtualizarTodos()
+{
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (IsPlayerConnected(i) && Dados[i][Logado])
+        {
+            AtualizarNecessidades(i);
+            SalvarConta(i);
+        }
+    }
+    return 1;
+}
+
+public OnPlayerConnect(playerid)
+{
+    GetPlayerName(playerid, Nome[playerid],
+        MAX_PLAYER_NAME);
+
+    InicializarDados(playerid);
+
+    Dados[playerid][VeiculoTrabalho] = INVALID_VEHICLE_ID;
+
+    if (CarregarConta(playerid))
+        MostrarLogin(playerid);
+    else
+        MostrarRegistro(playerid);
+
+    return 1;
+}
+
+public OnPlayerDisconnect(playerid, reason)
+{
+    #pragma unused reason
+
+    if (Dados[playerid][Logado])
+        SalvarConta(playerid);
+
+    if (Dados[playerid][VeiculoTrabalho] != INVALID_VEHICLE_ID)
+    {
+        DestroyVehicle(Dados[playerid][VeiculoTrabalho]);
+        Dados[playerid][VeiculoTrabalho] = INVALID_VEHICLE_ID;
+    }
+
+    return 1;
+}
+
+public OnPlayerSpawn(playerid)
+{
+    if (!Dados[playerid][Logado])
+        return 1;
+
+    SetPlayerInterior(playerid, 0);
+    SetPlayerVirtualWorld(playerid, 0);
+    SetPlayerPos(playerid, 1481.0, -1771.0, 18.8);
+    SetPlayerFacingAngle(playerid, 90.0);
+    SetCameraBehindPlayer(playerid);
+
+    return 1;
+}
+
+public OnPlayerDeath(playerid, killerid, reason)
+{
+    #pragma unused killerid
+    #pragma unused reason
+
+    Dados[playerid][Trabalhando] = false;
+
+    if (Dados[playerid][VeiculoTrabalho] != INVALID_VEHICLE_ID)
+    {
+        DestroyVehicle(Dados[playerid][VeiculoTrabalho]);
+        Dados[playerid][VeiculoTrabalho] = INVALID_VEHICLE_ID;
+    }
+
+    return 1;
+}
+
+// ============================================================
+// DIÁLOGOS - REGISTRO, LOGIN E MENUS
+// ============================================================
+
+public OnDialogResponse(playerid, dialogid, response,
+    listitem, inputtext[])
+{
+    if (!response)
+    {
+        if (dialogid == DIALOG_REGISTRO ||
+            dialogid == DIALOG_LOGIN)
+        {
+            Kick(playerid);
+            return 1;
+        }
+
+        if (dialogid == DIALOG_MENU)
+            return 1;
+
+        return 0;
+    }
+
+    if (dialogid == DIALOG_REGISTRO)
+    {
+        if (strlen(inputtext) < 4)
+        {
+            Mensagem(playerid, COR_VERMELHO,
+                "A senha precisa ter pelo menos 4 caracteres.");
+            MostrarRegistro(playerid);
+            return 1;
+        }
+
+        SHA256_PassHash(inputtext, Nome[playerid],
+            Dados[playerid][SenhaHash], 65);
+
+        Dados[playerid][Dinheiro] = DINHEIRO_INICIAL;
+        Dados[playerid][Banco] = 0;
+        Dados[playerid][Nivel] = 1;
+        Dados[playerid][Experiencia] = 0;
+        Dados[playerid][Fome] = 100;
+        Dados[playerid][Sede] = 100;
+        Dados[playerid][Emprego] = EMPREGO_NENHUM;
+        Dados[playerid][Skin] = 0;
+        Dados[playerid][CNH] = false;
+        Dados[playerid][Casa] = -1;
+
+        SalvarConta(playerid);
+        EntrarNoServidor(playerid);
+        return 1;
+    }
+
+    if (dialogid == DIALOG_LOGIN)
+    {
+        new hash[65];
+
+        SHA256_PassHash(inputtext, Nome[playerid],
+            hash, sizeof(hash));
+
+        if (strcmp(hash, Dados[playerid][SenhaHash], false))
+        {
+            Mensagem(playerid, COR_VERMELHO,
+                "Senha incorreta.");
+            MostrarLogin(playerid);
+            return 1;
+        }
+
+        EntrarNoServidor(playerid);
+        return 1;
+    }
+
+    if (dialogid == DIALOG_MENU)
+    {
+        switch (listitem)
+        {
+            case 0: MostrarStatus(playerid);
+            case 1: AbrirEmpregos(playerid);
+            case 2: AbrirGPS(playerid);
+            case 3: AbrirBanco(playerid);
+            case 4:
+            {
+                ShowPlayerDialog(playerid, DIALOG_MERCADO,
+                    DIALOG_STYLE_LIST,
+                    "{9B5CFF}Mercado",
+                    "Comida - $50\nAgua - $30",
+                    "Comprar", "Voltar");
+            }
+            case 5:
+            {
+                ShowPlayerDialog(playerid, DIALOG_ROUPAS,
+                    DIALOG_STYLE_LIST,
+                    "{9B5CFF}Roupas e CNH",
+                    "Comprar CNH - $1.000\nSkin 7\nSkin 15\nSkin 23\nSkin 29",
+                    "Selecionar", "Voltar");
+            }
+            case 6: AbrirCasas(playerid);
+            case 7:
+            {
+                ShowPlayerDialog(playerid, DIALOG_VEICULO,
+                    DIALOG_STYLE_LIST,
+                    "{9B5CFF}Veiculos",
+                    "Ver meu veiculo de trabalho",
+                    "Selecionar", "Voltar");
+            }
+        }
+        return 1;
+    }
+
+    return 0;
+}
+
+// ============================================================
+// PARTE 4/4 - DIALOGOS FINAIS E ENCERRAMENTO
+// ============================================================
+
+    if (dialogid == DIALOG_EMPREGOS)
+    {
+        switch (listitem)
+        {
+            case 0: Dados[playerid][Emprego] = EMPREGO_ENTREGADOR;
+            case 1: Dados[playerid][Emprego] = EMPREGO_ONIBUS;
+            case 2: Dados[playerid][Emprego] = EMPREGO_POLICIAL;
+            case 3: Dados[playerid][Emprego] = EMPREGO_MECANICO;
+            case 4: Dados[playerid][Emprego] = EMPREGO_NENHUM;
+        }
+
+        format(StringTemporaria, sizeof(StringTemporaria),
+            "Seu emprego agora e: %s.",
+            NomeEmprego(Dados[playerid][Emprego]));
+
+        Mensagem(playerid, COR_VERDE, StringTemporaria);
+        SalvarConta(playerid);
+        return 1;
+    }
+
+    if (dialogid == DIALOG_GPS)
+    {
+        switch (listitem)
+        {
+            case 0: SetPlayerCheckpoint(playerid, 1481.0, -1771.0, 18.8, 5.0);
+            case 1: SetPlayerCheckpoint(playerid, 1368.0, -1279.0, 13.5, 5.0);
+            case 2: SetPlayerCheckpoint(playerid, 1642.0, -1521.0, 13.5, 5.0);
+            case 3: SetPlayerCheckpoint(playerid, 2070.0, -1791.0, 13.5, 5.0);
+            case 4: SetPlayerCheckpoint(playerid, 1172.0, -1323.0, 15.4, 5.0);
+            case 5:
+            {
+                if (Dados[playerid][Casa] >= 0 &&
+                    Dados[playerid][Casa] < MAX_CASAS)
+                {
+                    new casa = Dados[playerid][Casa];
+
+                    SetPlayerCheckpoint(playerid,
+                        Casas[casa][CasaX],
+                        Casas[casa][CasaY],
+                        Casas[casa][CasaZ], 5.0);
+                }
+                else
+                {
+                    Mensagem(playerid, COR_VERMELHO,
+                        "Voce nao possui uma casa.");
+                }
+            }
+            case 6: DisablePlayerCheckpoint(playerid);
+        }
+
+        Mensagem(playerid, COR_CIANO,
+            "GPS atualizado.");
+        return 1;
+    }
+
+    if (dialogid == DIALOG_BANCO)
+    {
+        switch (listitem)
+        {
+            case 0:
+            {
+                if (RetirarDinheiro(playerid, 500))
+                    Dados[playerid][Banco] += 500;
+            }
+            case 1:
+            {
+                if (RetirarDinheiro(playerid, 1000))
+                    Dados[playerid][Banco] += 1000;
+            }
+            case 2:
+            {
+                if (Dados[playerid][Banco] >= 500)
+                {
+                    Dados[playerid][Banco] -= 500;
+                    Dados[playerid][Dinheiro] += 500;
+                }
+                else Mensagem(playerid, COR_VERMELHO,
+                    "Saldo bancario insuficiente.");
+            }
+            case 3:
+            {
+                if (Dados[playerid][Banco] >= 1000)
+                {
+                    Dados[playerid][Banco] -= 1000;
+                    Dados[playerid][Dinheiro] += 1000;
+                }
+                else Mensagem(playerid, COR_VERMELHO,
+                    "Saldo bancario insuficiente.");
+            }
+            case 4:
+            {
+                format(StringTemporaria, sizeof(StringTemporaria),
+                    "Dinheiro: $%d\nBanco: $%d",
+                    Dados[playerid][Dinheiro],
+                    Dados[playerid][Banco]);
+
+                ShowPlayerDialog(playerid, 1014,
+                    DIALOG_STYLE_MSGBOX,
+                    "{9B5CFF}Saldo bancario",
+                    StringTemporaria,
+                    "Fechar", "");
+            }
+        }
+
+        SalvarConta(playerid);
+        AbrirBanco(playerid);
+        return 1;
+    }
+
+    if (dialogid == DIALOG_CASAS)
+    {
+        if (listitem < 0 || listitem >= MAX_CASAS)
+            return 1;
+
+        if (Casas[listitem][Comprada])
+        {
+            Mensagem(playerid, COR_VERMELHO,
+                "Esta casa ja foi comprada.");
+            return 1;
+        }
+
+        if (!RetirarDinheiro(playerid, Casas[listitem][Preco]))
+        {
+            Mensagem(playerid, COR_VERMELHO,
+                "Voce nao tem dinheiro suficiente.");
+            return 1;
+        }
+
+        Casas[listitem][Comprada] = true;
+
+        format(Casas[listitem][Dono],
+            MAX_PLAYER_NAME, "%s", Nome[playerid]);
+
+        Dados[playerid][Casa] = listitem;
+
+        Mensagem(playerid, COR_VERDE,
+            "Parabens! Voce comprou uma casa.");
+
+        SalvarConta(playerid);
+        return 1;
+    }
+
+    if (dialogid == DIALOG_MERCADO)
+    {
+        if (listitem == 0)
+        {
+            if (RetirarDinheiro(playerid, 50))
+            {
+                Dados[playerid][Fome] += 25;
+                if (Dados[playerid][Fome] > 100)
+                    Dados[playerid][Fome] = 100;
+
+                Mensagem(playerid, COR_VERDE,
+                    "Voce comprou comida.");
+            }
+        }
+        else if (listitem == 1)
+        {
+            if (RetirarDinheiro(playerid, 30))
+            {
+                Dados[playerid][Sede] += 25;
+                if (Dados[playerid][Sede] > 100)
+                    Dados[playerid][Sede] = 100;
+
+                Mensagem(playerid, COR_VERDE,
+                    "Voce comprou agua.");
+            }
+        }
+
+        SalvarConta(playerid);
+        return 1;
+    }
+
+    if (dialogid == DIALOG_ROUPAS)
+    {
+        if (listitem == 0)
+        {
+            if (!Dados[playerid][CNH])
+            {
+                if (RetirarDinheiro(playerid, 1000))
+                {
+                    Dados[playerid][CNH] = true;
+                    Mensagem(playerid, COR_VERDE,
+                        "Sua CNH foi liberada.");
+                }
+            }
+            else
+            {
+                Mensagem(playerid, COR_CIANO,
+                    "Voce ja possui CNH.");
+            }
+        }
+        else
+        {
+            new skins[] = {7, 15, 23, 29};
+            new skin = skins[listitem - 1];
+
+            if (RetirarDinheiro(playerid, 300))
+            {
+                Dados[playerid][Skin] = skin;
+                SetPlayerSkin(playerid, skin);
+
+                Mensagem(playerid, COR_VERDE,
+                    "Roupa comprada e equipada.");
+            }
+        }
+
+        SalvarConta(playerid);
+        return 1;
+    }
+
+    if (dialogid == DIALOG_VEICULO)
+    {
+        if (Dados[playerid][VeiculoTrabalho] != INVALID_VEHICLE_ID &&
+            IsValidVehicle(Dados[playerid][VeiculoTrabalho]))
+        {
+            new Float:x, Float:y, Float:z;
+
+            GetVehiclePos(Dados[playerid][VeiculoTrabalho],
+                x, y, z);
+
+            SetPlayerPos(playerid, x + 2.0, y, z);
+            Mensagem(playerid, COR_CIANO,
+                "Voce foi ate seu veiculo de trabalho.");
+        }
+        else
+        {
+            Mensagem(playerid, COR_VERMELHO,
+                "Voce nao possui veiculo de trabalho ativo.");
+        }
+        return 1;
+    }
+
+    if (dialogid == DIALOG_DONO_LOGIN)
+    {
+        if (!EhDono(playerid))
+            return 1;
+
+        if (strcmp(inputtext, ZK_SENHA_DONO, false))
+        {
+            Mensagem(playerid, COR_VERMELHO,
+                "Senha administrativa incorreta.");
+            return 1;
+        }
+
+        AbrirPainelDono(playerid);
+        return 1;
+    }
+
+    if (dialogid == DIALOG_DONO)
+    {
+        if (!EhDono(playerid))
+            return 1;
+
+        switch (listitem)
+        {
+            case 0: CriarVeiculoDono(playerid, 560);
+            case 1: CriarVeiculoDono(playerid, 411);
+            case 2: CriarVeiculoDono(playerid, 522);
+            case 3: SetPlayerPos(playerid, 1481.0, -1771.0, 18.8);
+            case 4: SetPlayerPos(playerid, 1368.0, -1279.0, 13.5);
+            case 5: SetPlayerHealth(playerid, 100.0);
+            case 6:
+            {
+                Dados[playerid][Dinheiro] += 10000;
+                GivePlayerMoney(playerid, 10000);
+                SalvarConta(playerid);
+            }
+            case 7: SetPlayerSpecialAction(playerid, SPECIAL_ACTION_USEJETPACK);
+            case 8: SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
+        }
+
+        Mensagem(playerid, COR_DOURADO,
+            "[DONO] Acao administrativa executada.");
+        return 1;
+    }
+
+    return 0;
+}
+
+// ============================================================
+// CHECKPOINTS E FINALIZACAO
+// ============================================================
+
+public OnPlayerEnterCheckpoint(playerid)
+{
+    if (!Dados[playerid][Logado])
+        return 1;
+
+    DisablePlayerCheckpoint(playerid);
+
+    Mensagem(playerid, COR_VERDE,
+        "Voce chegou ao destino marcado no GPS.");
+
+    return 1;
+}
+
+public OnPlayerText(playerid, text[])
+{
+    if (!Dados[playerid][Logado])
+        return 0;
+
+    if (EhDono(playerid))
+    {
+        format(StringTemporaria, sizeof(StringTemporaria),
+            "{FFD700}[DONO] {FFFFFF}%s: %s",
+            Nome[playerid], text);
+    }
+    else
+    {
+        format(StringTemporaria, sizeof(StringTemporaria),
+            "{FFFFFF}%s: %s",
+            Nome[playerid], text);
+    }
+
+    SendClientMessageToAll(COR_BRANCO, StringTemporaria);
+    return 0;
+}
+
+// ============================================================
+// FIM DO GAMEMODE ZK RP MOBILE
+// ============================================================
