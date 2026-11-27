@@ -78,6 +78,7 @@ new Sede[MAX_PLAYERS];
 new Emprego[MAX_PLAYERS];
 new Skin[MAX_PLAYERS];
 new CNH[MAX_PLAYERS];
+new Dinheiro[MAX_PLAYERS];
 
 new CasaDoJogador[MAX_PLAYERS];
 new VeiculoPessoal[MAX_PLAYERS];
