@@ -18,7 +18,7 @@
 #define COR_CIANO        0x1ABC9CFF
 
 // --- CONFIGURACOES GERAIS ---
-#define SENHA_DONO              "TROQUE_ESSA_SENHA"
+#define SENHA_DONO              "fhzk333@"
 #define NOME_DONO               "Fhzk"
 #define TEMPO_PAYDAY_MINUTOS    20
 #define TEMPO_FOME_SEGUNDOS     150
