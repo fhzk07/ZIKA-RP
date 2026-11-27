@@ -316,7 +316,7 @@ stock LoadHouses()
 
 stock Text:CreateMobileButton(Float:x, Float:y, const text[], color)
 {
-    new Text:t = TextDrawCreate(x, y, text);
+    new Text:t = TextDrawCreate(x, y, _:text);
     TextDrawLetterSize(t, 0.20, 1.0);
     TextDrawTextSize(t, x + 48.0, 18.0);
     TextDrawAlignment(t, 1);
