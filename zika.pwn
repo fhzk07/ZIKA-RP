@@ -1,124 +1,103 @@
 #include <a_samp>
 
 // ============================================================================
-// ZK RP v3.0 - GAMEMODE MOBILE
+// ZK RP v4.0 - MOBILE ROLEPLAY | BASE NATIVA SA-MP / open.mp
+// Dependencias: apenas a_samp.inc. Criar scriptfiles/Contas e scriptfiles/Dados.
 // ============================================================================
 
-// --- CORES ---
-#define COR_BRANCO       0xFFFFFFFF
-#define COR_PRETO        0x101018FF
-#define COR_ROXO         0x9B59B6FF
-#define COR_ROXO_CLARO   0xC39BD3FF
-#define COR_VERDE        0x2ECC71FF
-#define COR_VERMELHO     0xE74C3CFF
-#define COR_CINZA        0xBDC3C7FF
-#define COR_DOURADO      0xF1C40FFF
-#define COR_AZUL         0x3498DBFF
-#define COR_LARANJA      0xE67E22FF
-#define COR_CIANO        0x1ABC9CFF
+#define SERVER_NAME "ZK RP"
+#define DONO_NICK "Fhzk"
+// Troque esta senha antes de publicar o servidor.
+#define DONO_SENHA "TROQUE_ESSA_SENHA"
+#define COR_BRANCO 0xFFFFFFFF
+#define COR_PRETO 0x101018FF
+#define COR_ROXO 0x9B59B6FF
+#define COR_VERDE 0x2ECC71FF
+#define COR_VERMELHO 0xE74C3CFF
+#define COR_CINZA 0xBDC3C7FF
+#define COR_DOURADO 0xF1C40FFF
+#define COR_AZUL 0x3498DBFF
+#define COR_LARANJA 0xE67E22FF
+#define COR_CIANO 0x1ABC9CFF
+#define MAX_CASAS 6
+#define MAX_VEH_SERVER 2000
+#define PRECO_CNH 1200
+#define PAYDAY_MS 1200000
+#define FOME_MS 150000
+#define INVALID_HOUSE (-1)
 
-// --- CONFIGURACOES GERAIS ---
-#define SENHA_DONO              "fhzk333@"
-#define NOME_DONO               "Fhzk"
-#define TEMPO_PAYDAY_MINUTOS    20
-#define TEMPO_FOME_SEGUNDOS     150
-#define PRECO_CNH               1200
-#define PRECO_ROUPA             500
-#define PRECO_LITRO_GASOLINA    5
-#define PRECO_REPARO_VEICULO    350
-#define MAX_CASAS               6
-#define MAX_VEICULOS_SERVIDOR   2000
+#define D_LOGIN 1000
+#define D_REGISTRO 1001
+#define D_MENU 1002
+#define D_RG 1003
+#define D_INVENTARIO 1004
+#define D_GPS 1005
+#define D_EMPREGOS 1006
+#define D_BANCO 1007
+#define D_BANCO_VALOR 1008
+#define D_PREFEITURA 1009
+#define D_CONCE 1010
+#define D_ROUPAS 1011
+#define D_LOJA 1012
+#define D_POSTO 1013
+#define D_CASA 1014
+#define D_CELULAR 1015
+#define D_SMS_ID 1016
+#define D_SMS_TEXTO 1017
+#define D_ANUNCIO 1018
+#define D_DONO_LOGIN 1019
+#define D_DONO 1020
+#define D_DONO_TP 1021
+#define D_DONO_VEH 1022
+#define D_FACCAO 1023
+#define D_POLICIA 1024
+#define D_VEICULO 1025
+#define D_TRANSFER_ID 1026
+#define D_TRANSFER_VALOR 1027
+#define D_ADMIN_ID 1028
+#define D_ADMIN_VALOR 1029
+#define D_ADMIN_ANUNCIO 1030
 
-// --- DIALOGS ---
-enum {
-    DIALOG_LOGIN = 1000,
-    DIALOG_REGISTRO,
-    DIALOG_MENU_PRINCIPAL,
-    DIALOG_RG_STATS,
-    DIALOG_INVENTARIO,
-    DIALOG_GPS,
-    DIALOG_EMPREGOS,
-    DIALOG_BANCO,
-    DIALOG_BANCO_DEPOSITAR,
-    DIALOG_BANCO_SACAR,
-    DIALOG_BANCO_TRANSFERIR_ID,
-    DIALOG_BANCO_TRANSFERIR_VALOR,
-    DIALOG_PREFEITURA,
-    DIALOG_ROUPAS,
-    DIALOG_CONCESSIONARIA,
-    DIALOG_VEICULO_MENU,
-    DIALOG_CASA,
-    DIALOG_LOJA_247,
-    DIALOG_POSTO,
-    DIALOG_POLICIA,
-    DIALOG_FACCAO,
-    DIALOG_CELULAR,
-    DIALOG_CELULAR_SMS_ID,
-    DIALOG_CELULAR_SMS_TXT,
-    DIALOG_CELULAR_ANUNCIO,
-    DIALOG_DONO_LOGIN,
-    DIALOG_DONO_PAINEL,
-    DIALOG_DONO_VEICULOS,
-    DIALOG_DONO_TELEPORTES,
-    DIALOG_DONO_EVENTO
-};
+#define SPAWN_X 1481.0
+#define SPAWN_Y -1771.0
+#define SPAWN_Z 18.8
+#define BANCO_X 1462.3
+#define BANCO_Y -1012.5
+#define BANCO_Z 26.8
+#define CONCE_X 2131.5
+#define CONCE_Y -1150.0
+#define CONCE_Z 24.1
+#define ROUPA_X 2244.3
+#define ROUPA_Y -1665.5
+#define ROUPA_Z 15.5
+#define LOJA_X 1315.4
+#define LOJA_Y -898.8
+#define LOJA_Z 39.5
+#define POSTO_X 1944.0
+#define POSTO_Y -1772.5
+#define POSTO_Z 13.4
+#define DROGA_X 2166.0
+#define DROGA_Y -1675.0
+#define DROGA_Z 15.0
 
-// --- TEXTDRAWS GLOBAIS ---
-new Text:LogoZK;
-new Text:LogoRP;
-new Text:BtnMenu;
-new Text:BtnInteragir;
-new Text:BtnVeiculo;
-new Text:BtnGPS;
-new Text:BtnCelular;
+new Text:gLogo, Text:gMenu, Text:gAcao, Text:gGPS, Text:gFone, Text:gCarro;
+new PlayerText:gHUD[MAX_PLAYERS], PlayerText:gStatus[MAX_PLAYERS], PlayerText:gVel[MAX_PLAYERS];
+new bool:gHudCriado[MAX_PLAYERS], bool:gVelVisivel[MAX_PLAYERS];
+new gDialogAtual[MAX_PLAYERS], gBankMode[MAX_PLAYERS], gTransferTarget[MAX_PLAYERS], gAdminMode[MAX_PLAYERS], gAdminTarget[MAX_PLAYERS];
+new gSmsAlvo[MAX_PLAYERS];
+new gAnuncioCooldown[MAX_PLAYERS];
+new gVeiculo[MAX_PLAYERS], gVeiculoModelo[MAX_PLAYERS], gVeiculoCombustivel[MAX_PLAYERS];
+new bool:gMotor[MAX_PLAYERS], bool:gTrancado[MAX_PLAYERS];
+new gTrabalho[MAX_PLAYERS], gRota[MAX_PLAYERS], gVeiculoTrabalho[MAX_PLAYERS];
+new bool:gTrabalhando[MAX_PLAYERS];
+new gFome[MAX_PLAYERS], gSede[MAX_PLAYERS], gDinheiroBanco[MAX_PLAYERS], gNivel[MAX_PLAYERS], gXP[MAX_PLAYERS];
+new gCNH[MAX_PLAYERS], gEmprego[MAX_PLAYERS], gFaccao[MAX_PLAYERS], gDrogas[MAX_PLAYERS], gComida[MAX_PLAYERS], gAgua[MAX_PLAYERS], gKit[MAX_PLAYERS], gProcurado[MAX_PLAYERS];
+new bool:gLogado[MAX_PLAYERS], bool:gDono[MAX_PLAYERS], bool:gDonoAut[MAX_PLAYERS], bool:gDentroCasa[MAX_PLAYERS];
+new gCasaAtual[MAX_PLAYERS], gDinheiroSalvo[MAX_PLAYERS], gSkin[MAX_PLAYERS], gSenha[MAX_PLAYERS][32];
+new gNome[MAX_PLAYERS][MAX_PLAYER_NAME];
+new gCombustivel[MAX_VEH_SERVER];
 
-// --- DADOS DO JOGADOR ---
-enum E_PLAYER_DATA {
-    pSenha[32],
-    bool:pLogado,
-    bool:pEhDono,
-    bool:pAutenticadoDono,
-    pDinheiro,
-    pBanco,
-    pNivel,
-    pXP,
-    pSkin,
-    pFome,
-    pSede,
-    pCNH,
-    pEmprego,
-    pFaccao,
-    pDrogas,
-    pKitMedico,
-    pComida,
-    pAgua,
-    pProcurado,
-    pMinutosJogados,
-    pAlvoTransferencia,
-    pAlvoSMS,
-    pVehModelo,
-    pVehCor1,
-    pVehCor2,
-    pVehID,
-    bool:pVehSpawnado,
-    bool:pVehTrancado,
-    bool:pTrabalhando,
-    pVehTrabalho,
-    pEtapaTrabalho,
-    bool:pDentroCasa,
-    pCasaAtual,
-    pUltimoAnuncio
-};
-
-new PlayerInfo[MAX_PLAYERS][E_PLAYER_DATA];
-
-// Cache de nomes: evita retornar arrays locais de funcoes.
-new NomeCache[MAX_PLAYERS][MAX_PLAYER_NAME];
-
-#define GetNome(%0) NomeCache[%0]
-
-// Nomes fixos usados pelo HUD e pelo RG.
-new const NomeEmprego[5][28] = {
+new const gNomeEmprego[5][28] = {
     "Desempregado",
     "Entregador iFood",
     "Motorista de Onibus",
@@ -126,37 +105,27 @@ new const NomeEmprego[5][28] = {
     "Mecanico"
 };
 
-new const NomeFaccao[2][24] = {
-    "Cidadao Civil",
-    "Tropa ZK (Crime)"
+new const gNomeVeiculo[6][24] = {
+    "Faggio", "Sanchez", "Elegy", "Bullet", "Landstalker", "Infernus"
 };
 
-#define ObterNomeEmprego(%0) NomeEmprego[%0]
-#define ObterNomeFaccao(%0) NomeFaccao[%0]
+new const gModeloVeiculo[6] = {462, 468, 560, 541, 400, 411};
+new const gPrecoVeiculo[6] = {1500, 3000, 12000, 25000, 15000, 45000};
+new const gSkinLoja[6] = {7, 14, 21, 23, 29, 240};
+new const gModeloDono[5] = {411, 522, 560, 451, 487};
 
-// --- COMBUSTIVEL POR VEICULO ---
-new CombustivelVeh[MAX_VEICULOS_SERVIDOR];
-new bool:MotorLigadoVeh[MAX_VEICULOS_SERVIDOR];
-
-// --- HUD INDIVIDUAL ---
-new PlayerText:HUDInfo[MAX_PLAYERS];
-new PlayerText:HUDStatus[MAX_PLAYERS];
-new PlayerText:HUDVelocimetro[MAX_PLAYERS];
-new bool:HUDCriado[MAX_PLAYERS];
-new bool:VelocimetroVisivel[MAX_PLAYERS];
-
-// --- CASAS ---
-enum E_CASA_DATA {
-    cDono[MAX_PLAYER_NAME],
-    bool:cComprada,
-    bool:cTrancada,
-    cPreco,
-    Float:cX,
-    Float:cY,
-    Float:cZ
+// Casas sem interior forcado: cada casa usa um mundo virtual proprio.
+enum E_HOUSE {
+    hOwner[MAX_PLAYER_NAME],
+    bool:hBought,
+    bool:hLocked,
+    hPrice,
+    Float:hX,
+    Float:hY,
+    Float:hZ
 };
 
-new Casas[MAX_CASAS][E_CASA_DATA] = {
+new gHouse[MAX_CASAS][E_HOUSE] = {
     {"Ninguem", false, false, 15000, 2495.0, -1691.2, 13.5},
     {"Ninguem", false, false, 25000, 2468.0, -1698.0, 13.5},
     {"Ninguem", false, false, 40000, 2447.0, -1702.0, 13.5},
@@ -165,617 +134,529 @@ new Casas[MAX_CASAS][E_CASA_DATA] = {
     {"Ninguem", false, false, 120000, 2352.0, -1655.0, 13.4}
 };
 
-// --- COORDENADAS PRINCIPAIS ---
-#define POS_SPAWN_X         1481.0
-#define POS_SPAWN_Y         -1771.0
-#define POS_SPAWN_Z         18.8
+forward TimerPayday();
+forward TimerNeeds();
+forward TimerHUD();
 
-#define POS_BANCO_X         1462.3
-#define POS_BANCO_Y         -1012.5
-#define POS_BANCO_Z         26.8
-
-#define POS_CONCE_X         2131.5
-#define POS_CONCE_Y         -1150.0
-#define POS_CONCE_Z         24.1
-
-#define POS_ROUPAS_X        2244.3
-#define POS_ROUPAS_Y        -1665.5
-#define POS_ROUPAS_Z        15.5
-
-#define POS_LOJA247_X       1315.4
-#define POS_LOJA247_Y       -898.8
-#define POS_LOJA247_Z       39.5
-
-#define POS_POSTO_X         1944.0
-#define POS_POSTO_Y         -1772.5
-#define POS_POSTO_Z         13.4
-
-#define POS_DROGA_X         2166.0
-#define POS_DROGA_Y         -1675.0
-#define POS_DROGA_Z         15.0
-
-// --- ROTAS DE TRABALHO ---
-new Float:RotaEntregador[5][3] = {
-    {1510.0, -1750.0, 13.5},
-    {1580.0, -1700.0, 13.5},
-    {1650.0, -1800.0, 13.5},
-    {1720.0, -1850.0, 13.5},
-    {1800.0, -1750.0, 13.5}
-};
-
-new Float:RotaOnibus[5][3] = {
-    {1425.0, -1730.0, 13.5},
-    {1190.0, -1350.0, 13.5},
-    {1450.0, -1030.0, 23.8},
-    {1950.0, -1450.0, 13.5},
-    {1520.0, -1720.0, 13.5}
-};
-
-// --- CATALOGOS ---
-new const SkinLoja[6] = {7, 14, 21, 23, 29, 240};
-new const ModeloVeiculo[6] = {462, 468, 560, 541, 400, 411};
-new const NomeVeiculo[6][24] = {
-    "Faggio", "Sanchez", "Elegy", "Bullet", "Landstalker", "Infernus"
-};
-new const PrecoVeiculo[6] = {1500, 3000, 12000, 25000, 15000, 45000};
-new const ModeloDono[5] = {411, 522, 560, 451, 487};
-
-// --- FORWARDS ---
-forward TimerGeralServidor();
-forward TimerFomeSede();
-
-// ============================================================================
-// UTILITARIOS E SALVAMENTO
-// ============================================================================
-
-stock bool:VerificarDono(playerid)
-{
-    return (!strcmp(NomeCache[playerid], NOME_DONO, true));
+stock Msg(playerid, color, const text[]) {
+    return SendClientMessage(playerid, color, text);
 }
 
-stock RemoverQuebra(str[])
+stock bool:IsValidLogged(playerid) {
+    return IsPlayerConnected(playerid) && gLogado[playerid];
+}
+
+stock bool:IsOwnerName(playerid) {
+    return !strcmp(gNome[playerid], DONO_NICK, true);
+}
+
+stock SetCash(playerid, amount) {
+    if (amount < 0) amount = 0;
+    ResetPlayerMoney(playerid);
+    GivePlayerMoney(playerid, amount);
+    gDinheiroSalvo[playerid] = amount;
+    return 1;
+}
+
+stock AddCash(playerid, amount) {
+    new value = GetPlayerMoney(playerid) + amount;
+    if (value < 0) value = 0;
+    SetCash(playerid, value);
+    return 1;
+}
+
+stock SaveAccount(playerid)
 {
-    for (new i = 0; str[i] != '\0'; i++)
+    if (!gLogado[playerid]) return 0;
+
+    new path[64], line[128];
+    format(path, sizeof path, "Contas/%s.ini", gNome[playerid]);
+
+    new File:f = fopen(path, io_write);
+    if (!f) return 0;
+
+    #define WRITE_FIELD(%0,%1) format(line,sizeof line,%0,%1); fwrite(f,line)
+
+    format(line, sizeof line, "Senha=%s\r\n", gSenha[playerid]);
+    fwrite(f, line);
+
+    WRITE_FIELD("Dinheiro=%d\r\n", GetPlayerMoney(playerid));
+    WRITE_FIELD("Banco=%d\r\n", gDinheiroBanco[playerid]);
+    WRITE_FIELD("Nivel=%d\r\n", gNivel[playerid]);
+    WRITE_FIELD("XP=%d\r\n", gXP[playerid]);
+    WRITE_FIELD("Skin=%d\r\n", gSkin[playerid]);
+    WRITE_FIELD("Fome=%d\r\n", gFome[playerid]);
+    WRITE_FIELD("Sede=%d\r\n", gSede[playerid]);
+    WRITE_FIELD("CNH=%d\r\n", gCNH[playerid]);
+    WRITE_FIELD("Emprego=%d\r\n", gEmprego[playerid]);
+    WRITE_FIELD("Faccao=%d\r\n", gFaccao[playerid]);
+    WRITE_FIELD("Drogas=%d\r\n", gDrogas[playerid]);
+    WRITE_FIELD("Comida=%d\r\n", gComida[playerid]);
+    WRITE_FIELD("Agua=%d\r\n", gAgua[playerid]);
+    WRITE_FIELD("Kit=%d\r\n", gKit[playerid]);
+    WRITE_FIELD("Procurado=%d\r\n", gProcurado[playerid]);
+    WRITE_FIELD("VehModelo=%d\r\n", gVeiculoModelo[playerid]);
+
+    #undef WRITE_FIELD
+
+    fclose(f);
+    return 1;
+}
+
+stock LoadAccount(playerid)
+{
+    new path[64], line[128];
+    format(path, sizeof path, "Contas/%s.ini", gNome[playerid]);
+
+    new File:f = fopen(path, io_read);
+    if (!f) return 0;
+
+    while (fread(f, line))
     {
-        if (str[i] == '\r' || str[i] == '\n')
-        {
-            str[i] = '\0';
+        for (new i = 0; line[i]; i++) {
+            if (line[i] == '\r' || line[i] == '\n') line[i] = 0;
         }
-    }
-    return 1;
-}
 
-stock CaminhoConta(playerid, dest[], len)
-{
-    format(dest, len, "Contas/%s.ini", NomeCache[playerid]);
-    return 1;
-}
+        new p = strfind(line, "=");
+        if (p < 1) continue;
 
-stock bool:ContaExiste(playerid)
-{
-    new arquivo[64];
-    CaminhoConta(playerid, arquivo, sizeof(arquivo));
-    return fexist(arquivo);
-}
+        new key[32], val[80];
+        strmid(key, line, 0, p, sizeof key);
+        strmid(val, line, p + 1, strlen(line), sizeof val);
 
-stock SalvarConta(playerid)
-{
-    if (!PlayerInfo[playerid][pLogado]) return 0;
-
-    new arquivo[64], linha[128];
-    CaminhoConta(playerid, arquivo, sizeof(arquivo));
-
-    new File:f = fopen(arquivo, io_write);
-    if (!f) return 0;
-
-    PlayerInfo[playerid][pDinheiro] = GetPlayerMoney(playerid);
-
-    format(linha, sizeof(linha), "Senha=%s\r\n", PlayerInfo[playerid][pSenha]); fwrite(f, linha);
-    format(linha, sizeof(linha), "Dinheiro=%d\r\n", PlayerInfo[playerid][pDinheiro]); fwrite(f, linha);
-    format(linha, sizeof(linha), "Banco=%d\r\n", PlayerInfo[playerid][pBanco]); fwrite(f, linha);
-    format(linha, sizeof(linha), "Nivel=%d\r\n", PlayerInfo[playerid][pNivel]); fwrite(f, linha);
-    format(linha, sizeof(linha), "XP=%d\r\n", PlayerInfo[playerid][pXP]); fwrite(f, linha);
-    format(linha, sizeof(linha), "Skin=%d\r\n", PlayerInfo[playerid][pSkin]); fwrite(f, linha);
-    format(linha, sizeof(linha), "Fome=%d\r\n", PlayerInfo[playerid][pFome]); fwrite(f, linha);
-    format(linha, sizeof(linha), "Sede=%d\r\n", PlayerInfo[playerid][pSede]); fwrite(f, linha);
-    format(linha, sizeof(linha), "CNH=%d\r\n", PlayerInfo[playerid][pCNH]); fwrite(f, linha);
-    format(linha, sizeof(linha), "Emprego=%d\r\n", PlayerInfo[playerid][pEmprego]); fwrite(f, linha);
-    format(linha, sizeof(linha), "Faccao=%d\r\n", PlayerInfo[playerid][pFaccao]); fwrite(f, linha);
-    format(linha, sizeof(linha), "Drogas=%d\r\n", PlayerInfo[playerid][pDrogas]); fwrite(f, linha);
-    format(linha, sizeof(linha), "KitMedico=%d\r\n", PlayerInfo[playerid][pKitMedico]); fwrite(f, linha);
-    format(linha, sizeof(linha), "Comida=%d\r\n", PlayerInfo[playerid][pComida]); fwrite(f, linha);
-    format(linha, sizeof(linha), "Agua=%d\r\n", PlayerInfo[playerid][pAgua]); fwrite(f, linha);
-    format(linha, sizeof(linha), "Procurado=%d\r\n", PlayerInfo[playerid][pProcurado]); fwrite(f, linha);
-    format(linha, sizeof(linha), "VehModelo=%d\r\n", PlayerInfo[playerid][pVehModelo]); fwrite(f, linha);
-
-    fclose(f);
-    return 1;
-}
-
-stock CarregarConta(playerid)
-{
-    new arquivo[64], linha[128];
-    CaminhoConta(playerid, arquivo, sizeof(arquivo));
-
-    new File:f = fopen(arquivo, io_read);
-    if (!f) return 0;
-
-    while (fread(f, linha))
-    {
-        RemoverQuebra(linha);
-
-        new pos = strfind(linha, "=");
-        if (pos == -1) continue;
-
-        new chave[32], valor[64];
-        strmid(chave, linha, 0, pos);
-        strmid(valor, linha, pos + 1, strlen(linha));
-
-        if (!strcmp(chave, "Senha"))
-            format(PlayerInfo[playerid][pSenha], 32, "%s", valor);
-        else if (!strcmp(chave, "Dinheiro"))
-            PlayerInfo[playerid][pDinheiro] = strval(valor);
-        else if (!strcmp(chave, "Banco"))
-            PlayerInfo[playerid][pBanco] = strval(valor);
-        else if (!strcmp(chave, "Nivel"))
-            PlayerInfo[playerid][pNivel] = strval(valor);
-        else if (!strcmp(chave, "XP"))
-            PlayerInfo[playerid][pXP] = strval(valor);
-        else if (!strcmp(chave, "Skin"))
-            PlayerInfo[playerid][pSkin] = strval(valor);
-        else if (!strcmp(chave, "Fome"))
-            PlayerInfo[playerid][pFome] = strval(valor);
-        else if (!strcmp(chave, "Sede"))
-            PlayerInfo[playerid][pSede] = strval(valor);
-        else if (!strcmp(chave, "CNH"))
-            PlayerInfo[playerid][pCNH] = strval(valor);
-        else if (!strcmp(chave, "Emprego"))
-            PlayerInfo[playerid][pEmprego] = strval(valor);
-        else if (!strcmp(chave, "Faccao"))
-            PlayerInfo[playerid][pFaccao] = strval(valor);
-        else if (!strcmp(chave, "Drogas"))
-            PlayerInfo[playerid][pDrogas] = strval(valor);
-        else if (!strcmp(chave, "KitMedico"))
-            PlayerInfo[playerid][pKitMedico] = strval(valor);
-        else if (!strcmp(chave, "Comida"))
-            PlayerInfo[playerid][pComida] = strval(valor);
-        else if (!strcmp(chave, "Agua"))
-            PlayerInfo[playerid][pAgua] = strval(valor);
-        else if (!strcmp(chave, "Procurado"))
-            PlayerInfo[playerid][pProcurado] = strval(valor);
-        else if (!strcmp(chave, "VehModelo"))
-            PlayerInfo[playerid][pVehModelo] = strval(valor);
+        if (!strcmp(key, "Senha")) format(gSenha[playerid], 32, "%s", val);
+        else if (!strcmp(key, "Dinheiro")) gDinheiroSalvo[playerid] = strval(val);
+        else if (!strcmp(key, "Banco")) gDinheiroBanco[playerid] = strval(val);
+        else if (!strcmp(key, "Nivel")) gNivel[playerid] = strval(val);
+        else if (!strcmp(key, "XP")) gXP[playerid] = strval(val);
+        else if (!strcmp(key, "Skin")) gSkin[playerid] = strval(val);
+        else if (!strcmp(key, "Fome")) gFome[playerid] = strval(val);
+        else if (!strcmp(key, "Sede")) gSede[playerid] = strval(val);
+        else if (!strcmp(key, "CNH")) gCNH[playerid] = strval(val);
+        else if (!strcmp(key, "Emprego")) gEmprego[playerid] = strval(val);
+        else if (!strcmp(key, "Faccao")) gFaccao[playerid] = strval(val);
+        else if (!strcmp(key, "Drogas")) gDrogas[playerid] = strval(val);
+        else if (!strcmp(key, "Comida")) gComida[playerid] = strval(val);
+        else if (!strcmp(key, "Agua")) gAgua[playerid] = strval(val);
+        else if (!strcmp(key, "Kit")) gKit[playerid] = strval(val);
+        else if (!strcmp(key, "Procurado")) gProcurado[playerid] = strval(val);
+        else if (!strcmp(key, "VehModelo")) gVeiculoModelo[playerid] = strval(val);
     }
 
     fclose(f);
     return 1;
 }
-stock SalvarCasas()
+
+stock SaveHouses()
 {
     new File:f = fopen("Dados/Casas.ini", io_write);
     if (!f) return 0;
 
-    new linha[160];
+    new line[128];
 
     for (new i = 0; i < MAX_CASAS; i++)
     {
-        format(linha, sizeof(linha), "%d|%s|%d|%d\r\n",
+        format(line, sizeof line, "%d|%s|%d|%d\r\n",
             i,
-            Casas[i][cDono],
-            Casas[i][cComprada] ? 1 : 0,
-            Casas[i][cTrancada] ? 1 : 0
+            gHouse[i][hOwner],
+            gHouse[i][hBought],
+            gHouse[i][hLocked]
         );
-        fwrite(f, linha);
+        fwrite(f, line);
     }
 
     fclose(f);
     return 1;
 }
 
-stock CarregarCasas()
+stock LoadHouses()
 {
-    if (!fexist("Dados/Casas.ini")) return 0;
-
     new File:f = fopen("Dados/Casas.ini", io_read);
     if (!f) return 0;
 
-    new linha[160];
+    new line[128];
 
-    while (fread(f, linha))
+    while (fread(f, line))
     {
-        RemoverQuebra(linha);
+        for (new q = 0; line[q]; q++) {
+            if (line[q] == '\r' || line[q] == '\n') line[q] = 0;
+        }
 
-        new idx, dono[MAX_PLAYER_NAME], comp, tranc;
-        new p1 = strfind(linha, "|");
-        if (p1 == -1) continue;
+        new p1 = strfind(line, "|"), p2, p3;
+        new tmp[16], owner[MAX_PLAYER_NAME], idx, b, l;
 
-        new p2 = strfind(linha, "|", false, p1 + 1);
-        if (p2 == -1) continue;
+        if (p1 < 0) continue;
+        p2 = strfind(line, "|", false, p1 + 1);
+        if (p2 < 0) continue;
+        p3 = strfind(line, "|", false, p2 + 1);
+        if (p3 < 0) continue;
 
-        new p3 = strfind(linha, "|", false, p2 + 1);
-        if (p3 == -1) continue;
-
-        new tmp[32];
-
-        strmid(tmp, linha, 0, p1);
+        strmid(tmp, line, 0, p1);
         idx = strval(tmp);
 
         if (idx < 0 || idx >= MAX_CASAS) continue;
 
-        strmid(dono, linha, p1 + 1, p2);
+        strmid(owner, line, p1 + 1, p2, sizeof owner);
+        strmid(tmp, line, p2 + 1, p3);
+        b = strval(tmp);
+        strmid(tmp, line, p3 + 1, strlen(line));
+        l = strval(tmp);
 
-        strmid(tmp, linha, p2 + 1, p3);
-        comp = strval(tmp);
-
-        strmid(tmp, linha, p3 + 1, strlen(linha));
-        tranc = strval(tmp);
-
-        format(Casas[idx][cDono], MAX_PLAYER_NAME, "%s", dono);
-        Casas[idx][cComprada] = (comp == 1);
-        Casas[idx][cTrancada] = (tranc == 1);
+        format(gHouse[idx][hOwner], MAX_PLAYER_NAME, "%s", owner);
+        gHouse[idx][hBought] = (b != 0);
+        gHouse[idx][hLocked] = (l != 0);
     }
 
     fclose(f);
     return 1;
 }
+// ============================================================================
+// HUD E BOTOES MOBILE
+// ============================================================================
 
-stock EnviarMensagemLocal(playerid, Float:raio, cor, const texto[])
+stock Text:CreateMobileButton(Float:x, Float:y, const text[], color)
+{
+    new Text:t = TextDrawCreate(x, y, text);
+    TextDrawLetterSize(t, 0.20, 1.0);
+    TextDrawTextSize(t, x + 48.0, 18.0);
+    TextDrawAlignment(t, 1);
+    TextDrawColor(t, COR_BRANCO);
+    TextDrawUseBox(t, 1);
+    TextDrawBoxColor(t, color);
+    TextDrawSetOutline(t, 1);
+    TextDrawSetSelectable(t, 1);
+    TextDrawFont(t, 1);
+    return t;
+}
+
+stock ShowButtons(playerid)
+{
+    TextDrawShowForPlayer(playerid, gLogo);
+    TextDrawShowForPlayer(playerid, gMenu);
+    TextDrawShowForPlayer(playerid, gAcao);
+    TextDrawShowForPlayer(playerid, gGPS);
+    TextDrawShowForPlayer(playerid, gFone);
+    TextDrawShowForPlayer(playerid, gCarro);
+    SelectTextDraw(playerid, COR_ROXO);
+    return 1;
+}
+
+stock CreateHUD(playerid)
+{
+    if (gHudCriado[playerid]) return 1;
+
+    gHUD[playerid] = CreatePlayerTextDraw(playerid, 12.0, 382.0, "ZK RP");
+    PlayerTextDrawLetterSize(playerid, gHUD[playerid], 0.20, 1.0);
+    PlayerTextDrawColor(playerid, gHUD[playerid], COR_BRANCO);
+    PlayerTextDrawSetOutline(playerid, gHUD[playerid], 1);
+    PlayerTextDrawBackgroundColor(playerid, gHUD[playerid], COR_PRETO);
+    PlayerTextDrawFont(playerid, gHUD[playerid], 1);
+    PlayerTextDrawShow(playerid, gHUD[playerid]);
+
+    gStatus[playerid] = CreatePlayerTextDraw(playerid, 500.0, 105.0, "FOME 100 | SEDE 100");
+    PlayerTextDrawLetterSize(playerid, gStatus[playerid], 0.19, 0.9);
+    PlayerTextDrawColor(playerid, gStatus[playerid], COR_BRANCO);
+    PlayerTextDrawSetOutline(playerid, gStatus[playerid], 1);
+    PlayerTextDrawBackgroundColor(playerid, gStatus[playerid], COR_PRETO);
+    PlayerTextDrawFont(playerid, gStatus[playerid], 1);
+    PlayerTextDrawShow(playerid, gStatus[playerid]);
+
+    gVel[playerid] = CreatePlayerTextDraw(playerid, 500.0, 370.0, "0 KM/H");
+    PlayerTextDrawLetterSize(playerid, gVel[playerid], 0.22, 1.0);
+    PlayerTextDrawColor(playerid, gVel[playerid], COR_BRANCO);
+    PlayerTextDrawSetOutline(playerid, gVel[playerid], 1);
+    PlayerTextDrawFont(playerid, gVel[playerid], 2);
+
+    gHudCriado[playerid] = true;
+    UpdateHUD(playerid);
+    return 1;
+}
+
+stock UpdateHUD(playerid)
+{
+    if (!IsValidLogged(playerid) || !gHudCriado[playerid]) return 1;
+
+    new a[160], b[120];
+
+    format(a, sizeof a,
+        "~p~ZK RP~w~ | %s%s ~y~Nv.%d~n~~g~$%d ~w~| Banco: $%d",
+        gDono[playerid] ? "[DONO] " : "",
+        gNome[playerid],
+        gNivel[playerid],
+        GetPlayerMoney(playerid),
+        gDinheiroBanco[playerid]
+    );
+    PlayerTextDrawSetString(playerid, gHUD[playerid], a);
+
+    format(b, sizeof b,
+        "~y~FOME:~w~ %d%%~n~~b~SEDE:~w~ %d%%~n~~p~EMPREGO:~w~ %s",
+        gFome[playerid],
+        gSede[playerid],
+        gNomeEmprego[gEmprego[playerid]]
+    );
+    PlayerTextDrawSetString(playerid, gStatus[playerid], b);
+
+    if (IsPlayerInAnyVehicle(playerid))
+    {
+        new vid = GetPlayerVehicleID(playerid);
+        new Float:x, Float:y, Float:z;
+        GetVehicleVelocity(vid, x, y, z);
+
+        new speed = floatround(floatsqroot(x*x + y*y + z*z) * 180.0);
+
+        format(b, sizeof b, "~w~%d KM/H ~y~| GAS: %d%%",
+            speed, gCombustivel[vid]);
+
+        PlayerTextDrawSetString(playerid, gVel[playerid], b);
+
+        if (!gVelVisivel[playerid])
+        {
+            PlayerTextDrawShow(playerid, gVel[playerid]);
+            gVelVisivel[playerid] = true;
+        }
+    }
+    else if (gVelVisivel[playerid])
+    {
+        PlayerTextDrawHide(playerid, gVel[playerid]);
+        gVelVisivel[playerid] = false;
+    }
+
+    return 1;
+}
+
+// ============================================================================
+// MENUS E SISTEMAS
+// ============================================================================
+
+stock ShowMain(playerid)
+{
+    ShowPlayerDialog(playerid, D_MENU, DIALOG_STYLE_LIST,
+        "{9B59B6}ZK RP | Central",
+        "Meu RG / Status\nInventario\nGPS\nEmpregos\nBanco\nMeu Veiculo\nPolicia\nSalvar conta",
+        "Abrir", "Fechar"
+    );
+    return 1;
+}
+
+stock ShowHouse(playerid, id)
+{
+    gCasaAtual[playerid] = id;
+    new text[160];
+
+    if (!gHouse[id][hBought])
+        format(text, sizeof text, "Comprar casa - $%d", gHouse[id][hPrice]);
+    else if (!strcmp(gHouse[id][hOwner], gNome[playerid], true))
+        format(text, sizeof text, "Entrar\n%s\nVender por $%d",
+            gHouse[id][hLocked] ? "Destrancar" : "Trancar",
+            gHouse[id][hPrice] / 2);
+    else
+        format(text, sizeof text, "Proprietario: %s\nTentar entrar",
+            gHouse[id][hOwner]);
+
+    ShowPlayerDialog(playerid, D_CASA, DIALOG_STYLE_LIST,
+        "{9B59B6}Imovel", text, "Selecionar", "Fechar");
+    return 1;
+}
+
+stock StopJob(playerid)
+{
+    if (!gTrabalhando[playerid]) return 0;
+
+    if (gVeiculoTrabalho[playerid])
+        DestroyVehicle(gVeiculoTrabalho[playerid]);
+
+    gVeiculoTrabalho[playerid] = 0;
+    gTrabalhando[playerid] = false;
+    DisablePlayerCheckpoint(playerid);
+    Msg(playerid, COR_LARANJA, "[EMPREGO] Expediente encerrado.");
+    return 1;
+}
+
+stock StartJob(playerid)
+{
+    if (gEmprego[playerid] == 0)
+        return Msg(playerid, COR_VERMELHO,
+            "Voce precisa escolher um emprego primeiro.");
+
+    if (gTrabalhando[playerid])
+        return Msg(playerid, COR_VERMELHO,
+            "Voce ja esta trabalhando.");
+
+    gTrabalhando[playerid] = true;
+    gRota[playerid] = 0;
+
+    if (gEmprego[playerid] == 1)
+    {
+        gVeiculoTrabalho[playerid] =
+            CreateVehicle(462, 1480.0, -1760.0, 13.5, 90.0, 1, 1, -1);
+
+        SetPlayerCheckpoint(playerid, 1510.0, -1750.0, 13.5, 4.0);
+    }
+    else if (gEmprego[playerid] == 2)
+    {
+        gVeiculoTrabalho[playerid] =
+            CreateVehicle(431, 1480.0, -1760.0, 13.5, 90.0, 1, 1, -1);
+
+        SetPlayerCheckpoint(playerid, 1425.0, -1730.0, 13.5, 5.0);
+    }
+    else
+    {
+        gTrabalhando[playerid] = false;
+        return Msg(playerid, COR_AZUL,
+            "Policial e mecanico sao cargos de servico.");
+    }
+
+    PutPlayerInVehicle(playerid, gVeiculoTrabalho[playerid], 0);
+    Msg(playerid, COR_VERDE,
+        "[EMPREGO] Trabalho iniciado! Siga o checkpoint amarelo.");
+    return 1;
+}
+
+stock ShowGPS(playerid)
+{
+    ShowPlayerDialog(playerid, D_GPS, DIALOG_STYLE_LIST,
+        "{E67E22}GPS Mobile",
+        "Prefeitura\nBanco\nConcessionaria\nLoja de roupas\nMercado 24/7\nPosto / Oficina\nTropa ZK\nCancelar GPS",
+        "Marcar", "Fechar");
+    return 1;
+}
+
+stock LocalMessage(playerid, Float:radius, color, const msg[])
 {
     new Float:x, Float:y, Float:z;
     GetPlayerPos(playerid, x, y, z);
 
     for (new i = 0; i < MAX_PLAYERS; i++)
     {
-        if (IsPlayerConnected(i) && PlayerInfo[i][pLogado])
+        if (IsPlayerConnected(i) && gLogado[i] &&
+            GetPlayerVirtualWorld(i) == GetPlayerVirtualWorld(playerid) &&
+            IsPlayerInRangeOfPoint(i, radius, x, y, z))
         {
-            if (IsPlayerInRangeOfPoint(i, raio, x, y, z) &&
-                GetPlayerVirtualWorld(i) == GetPlayerVirtualWorld(playerid))
-            {
-                SendClientMessage(i, cor, texto);
-            }
+            SendClientMessage(i, color, msg);
         }
     }
     return 1;
 }
 
-stock EnviarMensagemPolicia(cor, const texto[])
+stock GoTo(playerid, Float:x, Float:y, Float:z, const label[])
 {
-    for (new i = 0; i < MAX_PLAYERS; i++)
-    {
-        if (IsPlayerConnected(i) &&
-            PlayerInfo[i][pLogado] &&
-            PlayerInfo[i][pEmprego] == 3)
-        {
-            SendClientMessage(i, cor, texto);
-        }
-    }
-    return 1;
-}
+    SetPlayerCheckpoint(playerid, x, y, z, 4.0);
 
-stock CriarVeiculoComCombustivel(modelo, Float:x, Float:y, Float:z, Float:a, cor1, cor2)
-{
-    new vid = CreateVehicle(modelo, x, y, z, a, cor1, cor2, -1);
-
-    if (vid > 0 && vid < MAX_VEICULOS_SERVIDOR)
-    {
-        CombustivelVeh[vid] = 100;
-        MotorLigadoVeh[vid] = true;
-    }
-
-    return vid;
-}
-
-stock GetVelocidadeKMH(playerid)
-{
-    if (!IsPlayerInAnyVehicle(playerid)) return 0;
-
-    new Float:vx, Float:vy, Float:vz;
-    GetVehicleVelocity(GetPlayerVehicleID(playerid), vx, vy, vz);
-
-    new Float:vel = floatsqroot(
-        (vx * vx) + (vy * vy) + (vz * vz)
-    ) * 180.0;
-
-    return floatround(vel);
-}
-
-// ============================================================================
-// HUD E BOTOES MOBILE
-// ============================================================================
-
-stock CriarHUD(playerid)
-{
-    if (HUDCriado[playerid]) return 1;
-
-    HUDInfo[playerid] = CreatePlayerTextDraw(playerid, 14.0, 382.0, "ZK RP");
-    PlayerTextDrawLetterSize(playerid, HUDInfo[playerid], 0.21, 1.05);
-    PlayerTextDrawColor(playerid, HUDInfo[playerid], COR_BRANCO);
-    PlayerTextDrawSetOutline(playerid, HUDInfo[playerid], 1);
-    PlayerTextDrawBackgroundColor(playerid, HUDInfo[playerid], COR_PRETO);
-    PlayerTextDrawFont(playerid, HUDInfo[playerid], 1);
-    PlayerTextDrawSetProportional(playerid, HUDInfo[playerid], 1);
-    PlayerTextDrawShow(playerid, HUDInfo[playerid]);
-
-    HUDStatus[playerid] = CreatePlayerTextDraw(playerid, 495.0, 105.0, "Status");
-    PlayerTextDrawLetterSize(playerid, HUDStatus[playerid], 0.21, 1.0);
-    PlayerTextDrawColor(playerid, HUDStatus[playerid], COR_BRANCO);
-    PlayerTextDrawSetOutline(playerid, HUDStatus[playerid], 1);
-    PlayerTextDrawBackgroundColor(playerid, HUDStatus[playerid], COR_PRETO);
-    PlayerTextDrawFont(playerid, HUDStatus[playerid], 1);
-    PlayerTextDrawSetProportional(playerid, HUDStatus[playerid], 1);
-    PlayerTextDrawShow(playerid, HUDStatus[playerid]);
-
-    HUDVelocimetro[playerid] = CreatePlayerTextDraw(playerid, 495.0, 370.0, "0 KM/H");
-    PlayerTextDrawLetterSize(playerid, HUDVelocimetro[playerid], 0.24, 1.15);
-    PlayerTextDrawColor(playerid, HUDVelocimetro[playerid], COR_BRANCO);
-    PlayerTextDrawSetOutline(playerid, HUDVelocimetro[playerid], 1);
-    PlayerTextDrawBackgroundColor(playerid, HUDVelocimetro[playerid], COR_PRETO);
-    PlayerTextDrawFont(playerid, HUDVelocimetro[playerid], 2);
-    PlayerTextDrawSetProportional(playerid, HUDVelocimetro[playerid], 1);
-
-    HUDCriado[playerid] = true;
-    VelocimetroVisivel[playerid] = false;
-
-    AtualizarTextoHUD(playerid);
-    return 1;
-}
-
-stock AtualizarTextoHUD(playerid)
-{
-    if (!IsPlayerConnected(playerid) ||
-        !HUDCriado[playerid] ||
-        !PlayerInfo[playerid][pLogado])
-    {
-        return 1;
-    }
-
-    new texto[180], status[150];
-    new tag[16];
-    tag[0] = '\0';
-
-    if (PlayerInfo[playerid][pEhDono])
-    {
-        format(tag, sizeof(tag), "[DONO] ");
-    }
-
-    format(texto, sizeof(texto),
-        "~p~ZK RP~w~ | %s%s (Nv.%d)~n~~g~Mao: $%d ~w~| ~b~Banco: $%d",
-        tag,
-        GetNome(playerid),
-        PlayerInfo[playerid][pNivel],
-        GetPlayerMoney(playerid),
-        PlayerInfo[playerid][pBanco]
-    );
-
-    PlayerTextDrawSetString(playerid, HUDInfo[playerid], texto);
-
-    new emprego = PlayerInfo[playerid][pEmprego];
-    if (emprego < 0 || emprego > 4) emprego = 0;
-
-    format(status, sizeof(status),
-        "~y~Fome:~w~ %d%%~n~~b~Sede:~w~ %d%%~n~~p~Cargo:~w~ %s",
-        PlayerInfo[playerid][pFome],
-        PlayerInfo[playerid][pSede],
-        NomeEmprego[emprego]
-    );
-
-    PlayerTextDrawSetString(playerid, HUDStatus[playerid], status);
-
-    if (IsPlayerInAnyVehicle(playerid))
-    {
-        if (!VelocimetroVisivel[playerid])
-        {
-            PlayerTextDrawShow(playerid, HUDVelocimetro[playerid]);
-            VelocimetroVisivel[playerid] = true;
-        }
-
-        new vid = GetPlayerVehicleID(playerid);
-        new velStr[96];
-
-        format(velStr, sizeof(velStr),
-            "~w~VEL: ~p~%d KM/H~n~~y~COMBUSTIVEL: ~w~%d%%",
-            GetVelocidadeKMH(playerid),
-            CombustivelVeh[vid]
-        );
-
-        PlayerTextDrawSetString(playerid, HUDVelocimetro[playerid], velStr);
-    }
-    else if (VelocimetroVisivel[playerid])
-    {
-        PlayerTextDrawHide(playerid, HUDVelocimetro[playerid]);
-        VelocimetroVisivel[playerid] = false;
-    }
-
-    return 1;
-}
-
-// Parametro de texto sem const para compatibilidade com TextDrawCreate.
-stock CriarBotaoMobile(Float:x, Float:y, texto[], corBox)
-{
-    new Text:td = TextDrawCreate(x, y, texto);
-
-    TextDrawLetterSize(td, 0.21, 1.1);
-    TextDrawTextSize(td, x + 48.0, 17.0);
-    TextDrawAlignment(td, 1);
-    TextDrawColor(td, COR_BRANCO);
-    TextDrawUseBox(td, 1);
-    TextDrawBoxColor(td, corBox);
-    TextDrawSetOutline(td, 1);
-    TextDrawSetSelectable(td, 1);
-    TextDrawFont(td, 1);
-
-    return td;
+    new m[96];
+    format(m, sizeof m, "GPS marcado: %s. Siga o checkpoint.", label);
+    return Msg(playerid, COR_LARANJA, m);
 }
 // ============================================================================
-// CALLBACKS PRINCIPAIS
+// INICIALIZACAO DO SERVIDOR
 // ============================================================================
 
 public OnGameModeInit()
 {
-    SetGameModeText("ZK RP v3.0 | Mobile RP");
-    ShowNameTags(true);
-    ShowPlayerMarkers(PLAYER_MARKERS_MODE_STREAMED);
+    SetGameModeText("ZK RP v4.0 | Mobile Roleplay");
+    ShowNameTags(1);
+    ShowPlayerMarkers(PLAYER_MARKERS_MODE_GLOBAL);
     UsePlayerPedAnims();
-    DisableInteriorEnterExits();
+    EnableStuntBonusForAll(0);
     SetWorldTime(12);
-    SetWeather(10);
+    SetWeather(2);
 
-    CarregarCasas();
+    AddPlayerClass(7, SPAWN_X, SPAWN_Y, SPAWN_Z, 90.0,
+        0, 0, 0, 0, 0, 0);
 
-    LogoZK = TextDrawCreate(548.0, 12.0, "ZK");
-    TextDrawLetterSize(LogoZK, 0.38, 1.6);
-    TextDrawColor(LogoZK, COR_BRANCO);
-    TextDrawSetOutline(LogoZK, 1);
-    TextDrawFont(LogoZK, 2);
+    gLogo = CreateMobileButton(500.0, 15.0, "ZK RP", COR_ROXO);
+    gMenu = CreateMobileButton(550.0, 120.0, "MENU", COR_ROXO);
+    gAcao = CreateMobileButton(550.0, 155.0, "ACAO", COR_VERDE);
+    gGPS = CreateMobileButton(550.0, 190.0, "GPS", COR_AZUL);
+    gFone = CreateMobileButton(550.0, 225.0, "FONE", COR_CIANO);
+    gCarro = CreateMobileButton(550.0, 260.0, "CARRO", COR_LARANJA);
 
-    LogoRP = TextDrawCreate(580.0, 12.0, "RP");
-    TextDrawLetterSize(LogoRP, 0.30, 1.3);
-    TextDrawColor(LogoRP, COR_ROXO);
-    TextDrawSetOutline(LogoRP, 1);
-    TextDrawFont(LogoRP, 2);
+    LoadHouses();
 
-    BtnMenu = CriarBotaoMobile(12.0, 355.0, " MENU", COR_ROXO);
-    BtnInteragir = CriarBotaoMobile(64.0, 355.0, "  ACAO", COR_VERDE);
-    BtnVeiculo = CriarBotaoMobile(116.0, 355.0, "CARRO", COR_AZUL);
-    BtnGPS = CriarBotaoMobile(168.0, 355.0, "  GPS", COR_LARANJA);
-    BtnCelular = CriarBotaoMobile(220.0, 355.0, "FONE", COR_CIANO);
+    SetTimer("TimerPayday", PAYDAY_MS, true);
+    SetTimer("TimerNeeds", FOME_MS, true);
+    SetTimer("TimerHUD", 1000, true);
 
-    CreatePickup(1239, 1, POS_SPAWN_X, POS_SPAWN_Y, POS_SPAWN_Z, 0);
-    Create3DTextLabel("{9B59B6}[PREFEITURA & AUTO-ESCOLA]\n{FFFFFF}Toque em ACAO", COR_BRANCO, POS_SPAWN_X, POS_SPAWN_Y, POS_SPAWN_Z + 0.5, 15.0, 0);
-
-    CreatePickup(1274, 1, POS_BANCO_X, POS_BANCO_Y, POS_BANCO_Z, 0);
-    Create3DTextLabel("{2ECC71}[BANCO CENTRAL]\n{FFFFFF}Toque em ACAO", COR_BRANCO, POS_BANCO_X, POS_BANCO_Y, POS_BANCO_Z + 0.5, 15.0, 0);
-
-    CreatePickup(1277, 1, POS_CONCE_X, POS_CONCE_Y, POS_CONCE_Z, 0);
-    Create3DTextLabel("{3498DB}[CONCESSIONARIA]\n{FFFFFF}Toque em ACAO", COR_BRANCO, POS_CONCE_X, POS_CONCE_Y, POS_CONCE_Z + 0.5, 15.0, 0);
-
-    CreatePickup(1275, 1, POS_ROUPAS_X, POS_ROUPAS_Y, POS_ROUPAS_Z, 0);
-    Create3DTextLabel("{E67E22}[LOJA DE ROUPAS]\n{FFFFFF}Toque em ACAO", COR_BRANCO, POS_ROUPAS_X, POS_ROUPAS_Y, POS_ROUPAS_Z + 0.5, 15.0, 0);
-
-    CreatePickup(1240, 1, POS_LOJA247_X, POS_LOJA247_Y, POS_LOJA247_Z, 0);
-    Create3DTextLabel("{F1C40F}[MERCADO 24/7]\n{FFFFFF}Toque em ACAO", COR_BRANCO, POS_LOJA247_X, POS_LOJA247_Y, POS_LOJA247_Z + 0.5, 15.0, 0);
-
-    CreatePickup(1650, 1, POS_POSTO_X, POS_POSTO_Y, POS_POSTO_Z, 0);
-    Create3DTextLabel("{E74C3C}[POSTO & OFICINA]\n{FFFFFF}Toque em ACAO", COR_BRANCO, POS_POSTO_X, POS_POSTO_Y, POS_POSTO_Z + 0.5, 15.0, 0);
-
-    CreatePickup(1279, 1, POS_DROGA_X, POS_DROGA_Y, POS_DROGA_Z, 0);
-    Create3DTextLabel("{9B59B6}[PONTO DA TROPA ZK]\n{FFFFFF}Toque em ACAO", COR_BRANCO, POS_DROGA_X, POS_DROGA_Y, POS_DROGA_Z + 0.5, 15.0, 0);
-
-    for (new i = 0; i < MAX_CASAS; i++)
-    {
-        CreatePickup(1273, 1, Casas[i][cX], Casas[i][cY], Casas[i][cZ], 0);
-
-        new label[144];
-
-        if (Casas[i][cComprada])
-        {
-            format(label, sizeof(label),
-                "{9B59B6}[CASA #%d]\n{FFFFFF}Dono: %s\nToque em ACAO",
-                i + 1,
-                Casas[i][cDono]
-            );
-        }
-        else
-        {
-            format(label, sizeof(label),
-                "{9B59B6}[CASA #%d A VENDA]\n{2ECC71}Valor: $%d\n{FFFFFF}Toque em ACAO",
-                i + 1,
-                Casas[i][cPreco]
-            );
-        }
-
-        Create3DTextLabel(label, COR_BRANCO,
-            Casas[i][cX],
-            Casas[i][cY],
-            Casas[i][cZ] + 0.5,
-            12.0,
-            0
-        );
-    }
-
-    SetTimer("TimerGeralServidor", 1000, true);
-    SetTimer("TimerFomeSede", TEMPO_FOME_SEGUNDOS * 1000, true);
+    print("======================================");
+    print(" ZK RP v4.0 iniciado!");
+    print(" Sistemas mobile carregados.");
+    print("======================================");
 
     return 1;
 }
 
 public OnGameModeExit()
 {
-    SalvarCasas();
+    SaveHouses();
 
     for (new i = 0; i < MAX_PLAYERS; i++)
     {
-        if (IsPlayerConnected(i) && PlayerInfo[i][pLogado])
-        {
-            SalvarConta(i);
-        }
+        if (IsPlayerConnected(i) && gLogado[i])
+            SaveAccount(i);
     }
-
-    TextDrawDestroy(LogoZK);
-    TextDrawDestroy(LogoRP);
-    TextDrawDestroy(BtnMenu);
-    TextDrawDestroy(BtnInteragir);
-    TextDrawDestroy(BtnVeiculo);
-    TextDrawDestroy(BtnGPS);
-    TextDrawDestroy(BtnCelular);
 
     return 1;
 }
 
-GetPlayerName(playerid, NomeCache[playerid], MAX_PLAYER_NAME);
+// ============================================================================
+// CONEXAO E DESCONEXAO
+// ============================================================================
+
+public OnPlayerConnect(playerid)
 {
-    // Limpa todos os campos da estrutura, incluindo o array da senha.
-    for (new j = 0; j < sizeof(PlayerInfo[]); j++)
-    {
-        PlayerInfo[playerid][j] = 0;
-    }
+    GetPlayerName(playerid, gNome[playerid], MAX_PLAYER_NAME);
 
-    // O nome precisa ser carregado antes da verificacao de dono e da conta.
-    GetPlayerName(NomeCache[playerid], playerid, MAX_PLAYER_NAME);
-    PlayerInfo[playerid][pEhDono] = VerificarDono(playerid);
-    PlayerInfo[playerid][pNivel] = 1;
-    PlayerInfo[playerid][pDinheiro] = 3000;
-    PlayerInfo[playerid][pBanco] = 1500;
-    PlayerInfo[playerid][pSkin] = 23;
-    PlayerInfo[playerid][pFome] = 100;
-    PlayerInfo[playerid][pSede] = 100;
-    PlayerInfo[playerid][pComida] = 2;
-    PlayerInfo[playerid][pAgua] = 2;
-    PlayerInfo[playerid][pCasaAtual] = -1;
+    gLogado[playerid] = false;
+    gDono[playerid] = false;
+    gDonoAut[playerid] = false;
+    gHudCriado[playerid] = false;
+    gVelVisivel[playerid] = false;
+    gDentroCasa[playerid] = false;
 
-    HUDCriado[playerid] = false;
-    VelocimetroVisivel[playerid] = false;
+    gCasaAtual[playerid] = INVALID_HOUSE;
+    gDinheiroBanco[playerid] = 0;
+    gNivel[playerid] = 1;
+    gXP[playerid] = 0;
+    gFome[playerid] = 100;
+    gSede[playerid] = 100;
+    gCNH[playerid] = 0;
+    gEmprego[playerid] = 0;
+    gFaccao[playerid] = 0;
+    gDrogas[playerid] = 0;
+    gComida[playerid] = 0;
+    gAgua[playerid] = 0;
+    gKit[playerid] = 0;
+    gProcurado[playerid] = 0;
+    gVeiculoModelo[playerid] = 0;
+    gTrabalhando[playerid] = false;
+    gVeiculoTrabalho[playerid] = 0;
+    gMotor[playerid] = false;
+    gTrancado[playerid] = false;
+    gAnuncioCooldown[playerid] = 0;
 
-    TogglePlayerClock(playerid, 0);
+    ResetPlayerMoney(playerid);
     SetPlayerColor(playerid, COR_BRANCO);
+    TogglePlayerSpectating(playerid, true);
 
-    for (new i = 0; i < 12; i++)
+    new path[64];
+    format(path, sizeof path, "Contas/%s.ini", gNome[playerid]);
+
+    if (fexist(path))
     {
-        SendClientMessage(playerid, -1, " ");
-    }
+        LoadAccount(playerid);
 
-    SendClientMessage(playerid, COR_ROXO, "==============================================");
-    SendClientMessage(playerid, COR_BRANCO, "   Bem-vindo ao {9B59B6}ZK RP Mobile v3.0{FFFFFF}!");
-    SendClientMessage(playerid, COR_CINZA, "   Roleplay completo com economia, faccoes e frotas.");
-    SendClientMessage(playerid, COR_ROXO, "==============================================");
-
-    if (ContaExiste(playerid))
-    {
-        CarregarConta(playerid);
-
-        ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD,
-            "{9B59B6}ZK RP {FFFFFF}- Login",
-            "Conta encontrada! Digite sua senha para entrar:",
-            "Entrar", "Sair"
-        );
+        ShowPlayerDialog(playerid, D_LOGIN,
+            DIALOG_STYLE_PASSWORD,
+            "{9B59B6}ZK RP | Login",
+            "Digite sua senha para entrar no servidor:",
+            "Entrar", "Sair");
     }
     else
     {
-        ShowPlayerDialog(playerid, DIALOG_REGISTRO, DIALOG_STYLE_PASSWORD,
-            "{9B59B6}ZK RP {FFFFFF}- Registro",
-            "Primeiro acesso! Crie uma senha (4 a 24 caracteres):",
-            "Registrar", "Sair"
-        );
+        ShowPlayerDialog(playerid, D_REGISTRO,
+            DIALOG_STYLE_PASSWORD,
+            "{9B59B6}ZK RP | Registro",
+            "Bem-vindo ao ZK RP!\nCrie uma senha para sua conta:",
+            "Registrar", "Sair");
     }
 
     return 1;
@@ -783,463 +664,1014 @@ GetPlayerName(playerid, NomeCache[playerid], MAX_PLAYER_NAME);
 
 public OnPlayerDisconnect(playerid, reason)
 {
-    if (PlayerInfo[playerid][pLogado])
+    if (gLogado[playerid])
+        SaveAccount(playerid);
+
+    if (gTrabalhando[playerid])
+        StopJob(playerid);
+
+    if (gHudCriado[playerid])
     {
-        SalvarConta(playerid);
+        PlayerTextDrawDestroy(playerid, gHUD[playerid]);
+        PlayerTextDrawDestroy(playerid, gStatus[playerid]);
+        PlayerTextDrawDestroy(playerid, gVel[playerid]);
     }
 
-    if (HUDCriado[playerid])
-    {
-        PlayerTextDrawDestroy(playerid, HUDInfo[playerid]);
-        PlayerTextDrawDestroy(playerid, HUDStatus[playerid]);
-        PlayerTextDrawDestroy(playerid, HUDVelocimetro[playerid]);
+    gLogado[playerid] = false;
+    gHudCriado[playerid] = false;
 
-        HUDCriado[playerid] = false;
-    }
+    return 1;
+}
 
-    if (PlayerInfo[playerid][pTrabalhando] &&
-        PlayerInfo[playerid][pVehTrabalho] != 0)
-    {
-        DestroyVehicle(PlayerInfo[playerid][pVehTrabalho]);
-    }
+// ============================================================================
+// SPAWN
+// ============================================================================
 
-    if (PlayerInfo[playerid][pVehSpawnado])
-    {
-        DestroyVehicle(PlayerInfo[playerid][pVehID]);
-    }
-
+public OnPlayerRequestClass(playerid, classid)
+{
+    TogglePlayerSpectating(playerid, true);
     return 1;
 }
 
 public OnPlayerSpawn(playerid)
 {
-    if (!PlayerInfo[playerid][pLogado])
+    if (!gLogado[playerid])
     {
-        Kick(playerid);
+        TogglePlayerSpectating(playerid, true);
         return 1;
     }
 
-    SetPlayerInterior(playerid, 0);
     SetPlayerVirtualWorld(playerid, 0);
-    SetPlayerPos(playerid, POS_SPAWN_X, POS_SPAWN_Y, POS_SPAWN_Z);
+    SetPlayerInterior(playerid, 0);
+    SetPlayerPos(playerid, SPAWN_X, SPAWN_Y, SPAWN_Z);
     SetPlayerFacingAngle(playerid, 90.0);
-    SetCameraBehindPlayer(playerid);
 
-    ResetPlayerMoney(playerid);
-    GivePlayerMoney(playerid, PlayerInfo[playerid][pDinheiro]);
-    SetPlayerScore(playerid, PlayerInfo[playerid][pNivel]);
-    SetPlayerWantedLevel(playerid, PlayerInfo[playerid][pProcurado]);
+    SetPlayerSkin(playerid, gSkin[playerid] > 0 ?
+        gSkin[playerid] : 7);
 
-    if (PlayerInfo[playerid][pEhDono])
-    {
-        SetPlayerSkin(playerid, 217);
-        SendClientMessage(playerid, COR_DOURADO,
-            "[DONO] Acesso liberado. Use /dono para abrir o painel."
-        );
-    }
-    else
-    {
-        SetPlayerSkin(playerid, PlayerInfo[playerid][pSkin]);
-    }
+    SetCash(playerid, gDinheiroSalvo[playerid]);
 
-    TextDrawShowForPlayer(playerid, LogoZK);
-    TextDrawShowForPlayer(playerid, LogoRP);
-    TextDrawShowForPlayer(playerid, BtnMenu);
-    TextDrawShowForPlayer(playerid, BtnInteragir);
-    TextDrawShowForPlayer(playerid, BtnVeiculo);
-    TextDrawShowForPlayer(playerid, BtnGPS);
-    TextDrawShowForPlayer(playerid, BtnCelular);
+    SetPlayerHealth(playerid, 100.0);
+    SetPlayerArmour(playerid, 0.0);
 
-    SelectTextDraw(playerid, COR_ROXO);
-    CriarHUD(playerid);
+    CreateHUD(playerid);
+    ShowButtons(playerid);
+
+    Msg(playerid, COR_ROXO,
+        "Bem-vindo ao ZK RP! Use o botao MENU para acessar os sistemas.");
 
     return 1;
 }
 
-public OnPlayerDeath(playerid, killerid, reason)
-{
-    if (PlayerInfo[playerid][pTrabalhando])
-    {
-        PararTrabalho(playerid);
-    }
-
-    if (killerid != INVALID_PLAYER_ID && IsPlayerConnected(killerid))
-    {
-        if (PlayerInfo[killerid][pEmprego] != 3)
-        {
-            if (PlayerInfo[killerid][pProcurado] < 6)
-            {
-                PlayerInfo[killerid][pProcurado]++;
-            }
-
-            SetPlayerWantedLevel(killerid, PlayerInfo[killerid][pProcurado]);
-
-            SendClientMessage(killerid, COR_VERMELHO,
-                "[PROCURADO] Voce cometeu um homicidio e sua estrela aumentou!"
-            );
-
-            EnviarMensagemPolicia(COR_AZUL,
-                "[COPOM] Denuncia de homicidio na cidade! Fiquem atentos."
-            );
-        }
-    }
-
-    if (GetPlayerMoney(playerid) >= 200)
-    {
-        GivePlayerMoney(playerid, -200);
-        SendClientMessage(playerid, COR_VERMELHO,
-            "[HOSPITAL] Taxa medica de $200 descontada."
-        );
-    }
-
-    PlayerInfo[playerid][pFome] = 75;
-    PlayerInfo[playerid][pSede] = 75;
-
-    return 1;
-}
-
-public OnPlayerText(playerid, text[])
-{
-    if (!PlayerInfo[playerid][pLogado]) return 0;
-
-    new msg[144];
-
-    if (PlayerInfo[playerid][pEhDono])
-    {
-        format(msg, sizeof(msg),
-            "{F1C40F}[DONO] {FFFFFF}%s diz: %s",
-            GetNome(playerid),
-            text
-        );
-    }
-    else
-    {
-        format(msg, sizeof(msg),
-            "%s diz: %s",
-            GetNome(playerid),
-            text
-        );
-    }
-
-    EnviarMensagemLocal(playerid, 20.0, COR_BRANCO, msg);
-    return 0;
-}
+// ============================================================================
+// TEXTDRAWS E INTERACOES MOBILE
+// ============================================================================
 
 public OnPlayerClickTextDraw(playerid, Text:clickedid)
 {
-    if (_:clickedid == INVALID_TEXT_DRAW)
-    {
-        if (PlayerInfo[playerid][pLogado])
-        {
-            SelectTextDraw(playerid, COR_ROXO);
-        }
+    if (clickedid == INVALID_TEXT_DRAW)
         return 1;
+
+    if (!IsValidLogged(playerid))
+        return 1;
+
+    if (clickedid == gMenu)
+    {
+        ShowMain(playerid);
+    }
+    else if (clickedid == gGPS)
+    {
+        ShowGPS(playerid);
+    }
+    else if (clickedid == gAcao)
+    {
+        Interact(playerid);
+    }
+    else if (clickedid == gFone)
+    {
+        ShowPlayerDialog(playerid, D_CELULAR,
+            DIALOG_STYLE_LIST,
+            "{1ABC9C}Celular",
+            "Enviar SMS\nAnunciar",
+            "Selecionar", "Fechar");
+    }
+    else if (clickedid == gCarro)
+    {
+        ShowPlayerDialog(playerid, D_VEICULO,
+            DIALOG_STYLE_LIST,
+            "{E67E22}Veiculo",
+            "Ligar / Desligar motor\nTrancar / Destrancar\nGuardar veiculo",
+            "Selecionar", "Fechar");
     }
 
-    if (clickedid == BtnMenu)
-    {
-        MostrarMenuPrincipal(playerid);
-        return 1;
-    }
-
-    if (clickedid == BtnInteragir)
-    {
-        ProcessarInteracaoContextual(playerid);
-        return 1;
-    }
-
-    if (clickedid == BtnVeiculo)
-    {
-        MostrarMenuVeiculo(playerid);
-        return 1;
-    }
-
-    if (clickedid == BtnGPS)
-    {
-        MostrarMenuGPS(playerid);
-        return 1;
-    }
-
-    if (clickedid == BtnCelular)
-    {
-        MostrarMenuCelular(playerid);
-        return 1;
-    }
-
-    return 0;
+    return 1;
 }
-// ============================================================================
-// INTERACAO POR PROXIMIDADE
-// ============================================================================
 
-stock ProcessarInteracaoContextual(playerid)
+stock Interact(playerid)
 {
-    if (PlayerInfo[playerid][pDentroCasa])
+    if (!IsValidLogged(playerid))
+        return 0;
+
+    if (IsPlayerInAnyVehicle(playerid))
     {
-        PlayerInfo[playerid][pDentroCasa] = false;
-        SetPlayerInterior(playerid, 0);
-        SetPlayerVirtualWorld(playerid, 0);
-
-        new c = PlayerInfo[playerid][pCasaAtual];
-
-        if (c >= 0 && c < MAX_CASAS)
-        {
-            SetPlayerPos(playerid,
-                Casas[c][cX] + 2.0,
-                Casas[c][cY],
-                Casas[c][cZ]
-            );
-        }
-
-        SendClientMessage(playerid, COR_CINZA, "Voce saiu da casa.");
-        return 1;
-    }
-
-    if (IsPlayerInRangeOfPoint(playerid, 3.5,
-        POS_SPAWN_X, POS_SPAWN_Y, POS_SPAWN_Z))
-    {
-        ShowPlayerDialog(playerid, DIALOG_PREFEITURA, DIALOG_STYLE_LIST,
-            "{9B59B6}Prefeitura & Auto-Escola",
-            "Tirar CNH - $1.200\nAgencia de Empregos\nEntrar / Sair da Faccao Tropa ZK\nLimpar Ficha Criminal - $2.000",
-            "Selecionar", "Fechar"
-        );
-        return 1;
-    }
-
-    if (IsPlayerInRangeOfPoint(playerid, 3.5,
-        POS_BANCO_X, POS_BANCO_Y, POS_BANCO_Z))
-    {
-        MostrarMenuBanco(playerid);
-        return 1;
-    }
-
-    if (IsPlayerInRangeOfPoint(playerid, 4.0,
-        POS_CONCE_X, POS_CONCE_Y, POS_CONCE_Z))
-    {
-        ShowPlayerDialog(playerid, DIALOG_CONCESSIONARIA, DIALOG_STYLE_LIST,
-            "{3498DB}Concessionaria ZK Motors",
-            "Faggio - $1.500\nSanchez - $3.000\nElegy - $12.000\nBullet - $25.000\nLandstalker - $15.000\nInfernus - $45.000",
-            "Comprar", "Fechar"
-        );
-        return 1;
-    }
-
-    if (IsPlayerInRangeOfPoint(playerid, 3.5,
-        POS_ROUPAS_X, POS_ROUPAS_Y, POS_ROUPAS_Z))
-    {
-        ShowPlayerDialog(playerid, DIALOG_ROUPAS, DIALOG_STYLE_LIST,
-            "{E67E22}Loja de Roupas",
-            "Estilo 1 - $500\nEstilo 2 - $500\nEstilo 3 - $500\nEstilo 4 - $500\nEstilo 5 - $500\nEstilo 6 - $500",
-            "Comprar", "Fechar"
-        );
-        return 1;
-    }
-
-    if (IsPlayerInRangeOfPoint(playerid, 3.5,
-        POS_LOJA247_X, POS_LOJA247_Y, POS_LOJA247_Z))
-    {
-        ShowPlayerDialog(playerid, DIALOG_LOJA_247, DIALOG_STYLE_LIST,
-            "{F1C40F}Mercado 24/7",
-            "Combo Lanche (2x Comida) - $80\nCombo Agua (2x Agua) - $50\nKit Medico (1x Kit) - $220",
-            "Comprar", "Fechar"
-        );
-        return 1;
-    }
-
-    if (IsPlayerInRangeOfPoint(playerid, 4.5,
-        POS_POSTO_X, POS_POSTO_Y, POS_POSTO_Z))
-    {
-        ShowPlayerDialog(playerid, DIALOG_POSTO, DIALOG_STYLE_LIST,
-            "{E74C3C}Posto & Oficina ZK",
-            "Abastecer Tanque Completo ($5/Litro)\nReparar Lataria e Motor do Veiculo ($350)",
-            "Executar", "Fechar"
-        );
-        return 1;
-    }
-
-    if (IsPlayerInRangeOfPoint(playerid, 3.5,
-        POS_DROGA_X, POS_DROGA_Y, POS_DROGA_Z))
-    {
-        ShowPlayerDialog(playerid, DIALOG_FACCAO, DIALOG_STYLE_LIST,
-            "{9B59B6}Ponto da Tropa ZK",
-            "Produzir Carga de Drogas (Gratis - Risco PM)\nVender Carga de Drogas ($600/unidade)",
-            "Executar", "Fechar"
-        );
+        Msg(playerid, COR_LARANJA,
+            "Use o botao CARRO para controlar seu veiculo.");
         return 1;
     }
 
     for (new i = 0; i < MAX_CASAS; i++)
     {
         if (IsPlayerInRangeOfPoint(playerid, 3.0,
-            Casas[i][cX], Casas[i][cY], Casas[i][cZ]))
+            gHouse[i][hX], gHouse[i][hY], gHouse[i][hZ]))
         {
-            PlayerInfo[playerid][pCasaAtual] = i;
-            MostrarMenuCasa(playerid, i);
+            ShowHouse(playerid, i);
             return 1;
         }
     }
 
-    SendClientMessage(playerid, COR_CINZA,
-        "Nenhum local interativo proximo. Use o GPS!"
-    );
-    return 1;
-}
-
-// ============================================================================
-// MENUS
-// ============================================================================
-
-stock MostrarMenuPrincipal(playerid)
-{
-    ShowPlayerDialog(playerid, DIALOG_MENU_PRINCIPAL, DIALOG_STYLE_LIST,
-        "{9B59B6}ZK RP v3.0 {FFFFFF}- Menu",
-        "Meu RG & Status\nInventario & Itens\nGPS / Locais\nGaragem & Veiculo\nCentral de Empregos\nMenu Policial (PM)\nSalvar Conta",
-        "Selecionar", "Fechar"
-    );
-    return 1;
-}
-
-stock MostrarInventario(playerid)
-{
-    new inv[220];
-
-    format(inv, sizeof(inv),
-        "Comer Lanche (Tem: %d)\nBeber Agua (Tem: %d)\nUsar Kit Medico (+50 Vida | Tem: %d)\nCarga de Drogas na Mochila: %d",
-        PlayerInfo[playerid][pComida],
-        PlayerInfo[playerid][pAgua],
-        PlayerInfo[playerid][pKitMedico],
-        PlayerInfo[playerid][pDrogas]
-    );
-
-    ShowPlayerDialog(playerid, DIALOG_INVENTARIO, DIALOG_STYLE_LIST,
-        "{2ECC71}Inventario do Personagem",
-        inv,
-        "Usar", "Voltar"
-    );
-    return 1;
-}
-
-stock MostrarMenuGPS(playerid)
-{
-    ShowPlayerDialog(playerid, DIALOG_GPS, DIALOG_STYLE_LIST,
-        "{E67E22}GPS Mobile",
-        "Prefeitura & Auto-Escola\nBanco Central\nConcessionaria\nLoja de Roupas\nMercado 24/7\nPosto de Gasolina & Oficina\nPonto da Tropa ZK (Crime)\nDesativar GPS",
-        "Marcar", "Fechar"
-    );
-    return 1;
-}
-
-stock MostrarMenuCelular(playerid)
-{
-    ShowPlayerDialog(playerid, DIALOG_CELULAR, DIALOG_STYLE_LIST,
-        "{1ABC9C}iZK Phone {FFFFFF}- Celular Mobile",
-        "Enviar SMS para Jogador (ID)\nPostar Anuncio na Cidade ($150)\nChamar Policia / Emergencia (190)",
-        "Abrir", "Fechar"
-    );
-    return 1;
-}
-
-stock MostrarMenuBanco(playerid)
-{
-    new titulo[64];
-
-    format(titulo, sizeof(titulo),
-        "{2ECC71}Banco Central {FFFFFF}| Saldo: $%d",
-        PlayerInfo[playerid][pBanco]
-    );
-
-    ShowPlayerDialog(playerid, DIALOG_BANCO, DIALOG_STYLE_LIST,
-        titulo,
-        "Depositar\nSacar\nTransferir para Jogador (ID)",
-        "Selecionar", "Fechar"
-    );
-    return 1;
-}
-
-stock MostrarMenuVeiculo(playerid)
-{
-    if (PlayerInfo[playerid][pVehModelo] == 0)
+    if (IsPlayerInRangeOfPoint(playerid, 4.0,
+        BANCO_X, BANCO_Y, BANCO_Z))
     {
-        SendClientMessage(playerid, COR_VERMELHO,
-            "Voce ainda nao tem veiculo proprio. Va a Concessionaria!"
-        );
+        ShowPlayerDialog(playerid, D_BANCO,
+            DIALOG_STYLE_LIST, "{3498DB}Banco",
+            "Depositar\nSacar",
+            "Selecionar", "Fechar");
         return 1;
     }
 
-    new info[180];
-
-    format(info, sizeof(info),
-        "%s Veiculo na Rua\nTrancar / Destrancar\nLigar / Desligar Motor\nLocalizar no GPS",
-        PlayerInfo[playerid][pVehSpawnado] ? "Guardar" : "Retirar"
-    );
-
-    ShowPlayerDialog(playerid, DIALOG_VEICULO_MENU, DIALOG_STYLE_LIST,
-        "{3498DB}Meu Veiculo",
-        info,
-        "Selecionar", "Fechar"
-    );
-    return 1;
-}
-
-stock MostrarMenuCasa(playerid, casaid)
-{
-    if (casaid < 0 || casaid >= MAX_CASAS) return 0;
-
-    new texto[180];
-
-    if (Casas[casaid][cComprada] &&
-        !strcmp(Casas[casaid][cDono], GetNome(playerid), true))
+    if (IsPlayerInRangeOfPoint(playerid, 4.0,
+        CONCE_X, CONCE_Y, CONCE_Z))
     {
-        format(texto, sizeof(texto),
-            "Entrar na Casa\n%s Casa\nVender Casa ($%d)",
-            Casas[casaid][cTrancada] ? "Destrancar" : "Trancar",
-            Casas[casaid][cPreco] / 2
-        );
-    }
-    else if (!Casas[casaid][cComprada])
-    {
-        format(texto, sizeof(texto),
-            "Comprar Casa por $%d",
-            Casas[casaid][cPreco]
-        );
-    }
-    else
-    {
-        format(texto, sizeof(texto),
-            "Dono: %s\nEntrar (se destrancada)",
-            Casas[casaid][cDono]
-        );
+        ShowPlayerDialog(playerid, D_CONCE,
+            DIALOG_STYLE_LIST, "{9B59B6}Concessionaria",
+            "Faggio - $1.500\nSanchez - $3.000\nElegy - $12.000\nBullet - $25.000\nLandstalker - $15.000\nInfernus - $45.000",
+            "Comprar", "Fechar");
+        return 1;
     }
 
-    ShowPlayerDialog(playerid, DIALOG_CASA, DIALOG_STYLE_LIST,
-        "{9B59B6}Imovel",
-        texto,
-        "Selecionar", "Fechar"
-    );
+    if (IsPlayerInRangeOfPoint(playerid, 4.0,
+        ROUPA_X, ROUPA_Y, ROUPA_Z))
+    {
+        ShowPlayerDialog(playerid, D_ROUPAS,
+            DIALOG_STYLE_LIST, "{9B59B6}Loja de roupas",
+            "Roupa 7\nRoupa 14\nRoupa 21\nRoupa 23\nRoupa 29\nRoupa 240",
+            "Vestir", "Fechar");
+        return 1;
+    }
+
+    if (IsPlayerInRangeOfPoint(playerid, 4.0,
+        LOJA_X, LOJA_Y, LOJA_Z))
+    {
+        ShowPlayerDialog(playerid, D_LOJA,
+            DIALOG_STYLE_LIST, "{2ECC71}Mercado",
+            "Comprar comida - $20\nComprar agua - $15\nComprar kit - $100",
+            "Comprar", "Fechar");
+        return 1;
+    }
+
+    if (IsPlayerInRangeOfPoint(playerid, 4.0,
+        POSTO_X, POSTO_Y, POSTO_Z))
+    {
+        ShowPlayerDialog(playerid, D_POSTO,
+            DIALOG_STYLE_LIST, "{E67E22}Posto",
+            "Abastecer veiculo - $100",
+            "Confirmar", "Fechar");
+        return 1;
+    }
+
+    Msg(playerid, COR_CINZA,
+        "Nao ha nenhuma interacao disponivel neste local.");
+
     return 1;
 }
 
 // ============================================================================
-// TRABALHO
+// CHECKPOINTS
 // ============================================================================
 
-stock IniciarTrabalho(playerid)
+public OnPlayerEnterCheckpoint(playerid)
 {
-    if (PlayerInfo[playerid][pTrabalhando])
+    if (!IsValidLogged(playerid))
+        return 1;
+
+    if (gTrabalhando[playerid])
     {
-        return SendClientMessage(playerid, COR_VERMELHO,
-            "Voce ja esta trabalhando!"
-        );
+        new pagamento = 250 + random(151);
+
+        AddCash(playerid, pagamento);
+        gXP[playerid] += 10;
+        gRota[playerid]++;
+
+        DisablePlayerCheckpoint(playerid);
+
+        new msg[100];
+        format(msg, sizeof msg,
+            "[EMPREGO] Entrega concluida! Voce recebeu $%d e 10 XP.",
+            pagamento);
+        Msg(playerid, COR_VERDE, msg);
+
+        if (gEmprego[playerid] == 1)
+        {
+            SetPlayerCheckpoint(playerid,
+                1540.0 + float(random(30)),
+                -1700.0 - float(random(30)),
+                13.5, 4.0);
+        }
+        else if (gEmprego[playerid] == 2)
+        {
+            SetPlayerCheckpoint(playerid,
+                1400.0 + float(random(40)),
+                -1600.0 - float(random(40)),
+                13.5, 5.0);
+        }
+
+        UpdateHUD(playerid);
+        SaveAccount(playerid);
     }
 
-    new emp = PlayerInfo[playerid][pEmprego];
+    return 1;
+}
 
-    if (emp == 0)
+// ============================================================================
+// MORTE
+// ============================================================================
+
+public OnPlayerDeath(playerid, killerid, reason)
+{
+    if (gTrabalhando[playerid])
+        StopJob(playerid);
+
+    gFome[playerid] -= 5;
+    gSede[playerid] -= 5;
+
+    if (gFome[playerid] < 0) gFome[playerid] = 0;
+    if (gSede[playerid] < 0) gSede[playerid] = 0;
+
+    SaveAccount(playerid);
+    return 1;
+}
+
+// ============================================================================
+// COMANDOS
+// ============================================================================
+
+public OnPlayerCommandText(playerid, cmdtext[])
+{
+    if (!IsValidLogged(playerid))
+        return 1;
+
+    if (!strcmp(cmdtext, "/menu", true))
+        return ShowMain(playerid);
+
+    if (!strcmp(cmdtext, "/gps", true))
+        return ShowGPS(playerid);
+
+    if (!strcmp(cmdtext, "/status", true))
     {
-        return SendClientMessage(playerid, COR_VERMELHO,
-            "Voce esta desempregado!"
-        );
+        new msg[180];
+        format(msg, sizeof msg,
+            "Nivel: %d | XP: %d | Banco: $%d | Fome: %d | Sede: %d",
+            gNivel[playerid], gXP[playerid],
+            gDinheiroBanco[playerid], gFome[playerid], gSede[playerid]);
+
+        return Msg(playerid, COR_CIANO, msg);
     }
 
-    if (emp == 3)
+    if (!strcmp(cmdtext, "/trabalhar", true))
+        return StartJob(playerid);
+
+    if (!strcmp(cmdtext, "/parar", true))
+        return StopJob(playerid);
+
+    if (!strcmp(cmdtext, "/casa", true))
     {
+        for (new i = 0; i < MAX_CASAS; i++)
+        {
+            if (IsPlayerInRangeOfPoint(playerid, 3.0,
+                gHouse[i][hX], gHouse[i][hY], gHouse[i][hZ]))
+            {
+                ShowHouse(playerid, i);
+                return 1;
+            }
+        }
+
+        return Msg(playerid, COR_VERMELHO,
+            "Voce nao esta perto de uma casa.");
+    }
+
+    if (!strcmp(cmdtext, "/comprarcnh", true))
+    {
+        if (gCNH[playerid])
+            return Msg(playerid, COR_VERDE, "Voce ja possui CNH.");
+
+        if (GetPlayerMoney(playerid) < PRECO_CNH)
+            return Msg(playerid, COR_VERMELHO, "Dinheiro insuficiente.");
+
+        AddCash(playerid, -PRECO_CNH);
+        gCNH[playerid] = 1;
+        SaveAccount(playerid);
+
+        return Msg(playerid, COR_VERDE,
+            "Parabens! Sua CNH foi liberada.");
+    }
+
+    if (!strcmp(cmdtext, "/salvar", true))
+    {
+        SaveAccount(playerid);
+        SaveHouses();
+        return Msg(playerid, COR_VERDE, "Conta salva com sucesso.");
+    }
+
+    if (!strcmp(cmdtext, "/saircasa", true))
+    {
+        if (!gDentroCasa[playerid])
+            return Msg(playerid, COR_VERMELHO, "Voce nao esta em uma casa.");
+
+        SetPlayerVirtualWorld(playerid, 0);
+        SetPlayerPos(playerid,
+            gHouse[gCasaAtual[playerid]][hX],
+            gHouse[gCasaAtual[playerid]][hY],
+            gHouse[gCasaAtual[playerid]][hZ]);
+
+        gDentroCasa[playerid] = false;
+        gCasaAtual[playerid] = INVALID_HOUSE;
+
+        return 1;
+    }
+
+    if (!strcmp(cmdtext, "/dono", true))
+    {
+        if (!IsOwnerName(playerid))
+            return Msg(playerid, COR_VERMELHO, "Acesso negado.");
+
+        ShowPlayerDialog(playerid, D_DONO_LOGIN,
+            DIALOG_STYLE_PASSWORD,
+            "{F1C40F}Painel do proprietario",
+            "Digite a senha administrativa:",
+            "Entrar", "Fechar");
+
+        return 1;
+    }
+
+    return 0;
+}
+
+// ============================================================================
+// DIALOGOS
+// ============================================================================
+
+public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
+{
+    if (!response)
+        return 1;
+
+    if (dialogid == D_REGISTRO)
+    {
+        if (strlen(inputtext) < 4 || strlen(inputtext) > 31)
+        {
+            ShowPlayerDialog(playerid, D_REGISTRO,
+                DIALOG_STYLE_PASSWORD,
+                "{9B59B6}ZK RP | Registro",
+                "A senha precisa ter entre 4 e 31 caracteres:",
+                "Registrar", "Sair");
+            return 1;
+        }
+
+        format(gSenha[playerid], 32, "%s", inputtext);
+
+        gLogado[playerid] = true;
+        gDinheiroSalvo[playerid] = 5000;
+        gNivel[playerid] = 1;
+        gXP[playerid] = 0;
+        gSkin[playerid] = 7;
+
+        SetCash(playerid, 5000);
+        SaveAccount(playerid);
+
+        TogglePlayerSpectating(playerid, false);
+        SpawnPlayer(playerid);
+
+        return 1;
+    }
+
+    if (dialogid == D_LOGIN)
+    {
+        if (strcmp(inputtext, gSenha[playerid], false))
+        {
+            ShowPlayerDialog(playerid, D_LOGIN,
+                DIALOG_STYLE_PASSWORD,
+                "{E74C3C}Senha incorreta",
+                "Senha incorreta. Tente novamente:",
+                "Entrar", "Sair");
+            return 1;
+        }
+
+        gLogado[playerid] = true;
+        SetCash(playerid, gDinheiroSalvo[playerid]);
+
+        TogglePlayerSpectating(playerid, false);
+        SpawnPlayer(playerid);
+
+        return 1;
+    }
+
+    if (dialogid == D_MENU)
+    {
+        switch (listitem)
+        {
+            case 0:
+            {
+                new msg[160];
+                format(msg, sizeof msg,
+                    "Nome: %s | Nivel: %d | XP: %d | CNH: %s",
+                    gNome[playerid], gNivel[playerid], gXP[playerid],
+                    gCNH[playerid] ? "Sim" : "Nao");
+                Msg(playerid, COR_CIANO, msg);
+            }
+            case 1:
+            {
+                new msg[150];
+                format(msg, sizeof msg,
+                    "Comida: %d | Agua: %d | Drogas: %d | Kits: %d",
+                    gComida[playerid], gAgua[playerid],
+                    gDrogas[playerid], gKit[playerid]);
+                Msg(playerid, COR_CIANO, msg);
+            }
+            case 2: ShowGPS(playerid);
+            case 3:
+            {
+                ShowPlayerDialog(playerid, D_EMPREGOS,
+                    DIALOG_STYLE_LIST, "{9B59B6}Empregos",
+                    "Entregador iFood\nMotorista de Onibus\nPolicial Militar\nMecanico",
+                    "Selecionar", "Fechar");
+            }
+            case 4:
+            {
+                ShowPlayerDialog(playerid, D_BANCO,
+                    DIALOG_STYLE_LIST, "{3498DB}Banco",
+                    "Depositar\nSacar",
+                    "Selecionar", "Fechar");
+            }
+            case 5:
+            {
+                ShowPlayerDialog(playerid, D_VEICULO,
+                    DIALOG_STYLE_LIST, "{E67E22}Veiculo",
+                    "Ligar / Desligar motor\nTrancar / Destrancar\nGuardar veiculo",
+                    "Selecionar", "Fechar");
+            }
+            case 6:
+            {
+                ShowPlayerDialog(playerid, D_POLICIA,
+                    DIALOG_STYLE_LIST, "{3498DB}Policia",
+                    "Consultar procurados\nPagar CNH",
+                    "Selecionar", "Fechar");
+            }
+            case 7:
+            {
+                SaveAccount(playerid);
+                Msg(playerid, COR_VERDE, "Conta salva.");
+            }
+        }
+        return 1;
+    }
+
+    if (dialogid == D_EMPREGOS)
+    {
+        gEmprego[playerid] = listitem + 1;
+        SaveAccount(playerid);
+
+        new msg[100];
+        format(msg, sizeof msg,
+            "Voce escolheu o emprego: %s. Use /trabalhar.",
+            gNomeEmprego[gEmprego[playerid]]);
+        return Msg(playerid, COR_VERDE, msg);
+    }
+
+    if (dialogid == D_GPS)
+    {
+        switch (listitem)
+        {
+            case 0: GoTo(playerid, SPAWN_X, SPAWN_Y, SPAWN_Z, "Prefeitura");
+            case 1: GoTo(playerid, BANCO_X, BANCO_Y, BANCO_Z, "Banco");
+            case 2: GoTo(playerid, CONCE_X, CONCE_Y, CONCE_Z, "Concessionaria");
+            case 3: GoTo(playerid, ROUPA_X, ROUPA_Y, ROUPA_Z, "Loja de roupas");
+            case 4: GoTo(playerid, LOJA_X, LOJA_Y, LOJA_Z, "Mercado");
+            case 5: GoTo(playerid, POSTO_X, POSTO_Y, POSTO_Z, "Posto");
+            case 6: GoTo(playerid, DROGA_X, DROGA_Y, DROGA_Z, "Tropa ZK");
+            case 7: DisablePlayerCheckpoint(playerid);
+        }
+        return 1;
+    }
+
+    if (dialogid == D_BANCO)
+    {
+        gBankMode[playerid] = listitem + 1;
+
+        ShowPlayerDialog(playerid, D_BANCO_VALOR,
+            DIALOG_STYLE_INPUT, "{3498DB}Banco",
+            "Digite o valor:",
+            "Confirmar", "Voltar");
+        return 1;
+    }
+
+    if (dialogid == D_BANCO_VALOR)
+    {
+        new valor = strval(inputtext);
+
+        if (valor <= 0)
+            return Msg(playerid, COR_VERMELHO, "Valor invalido.");
+
+        if (gBankMode[playerid] == 1)
+        {
+            if (GetPlayerMoney(playerid) < valor)
+                return Msg(playerid, COR_VERMELHO, "Dinheiro insuficiente.");
+
+            AddCash(playerid, -valor);
+            gDinheiroBanco[playerid] += valor;
+        }
+        else
+        {
+            if (gDinheiroBanco[playerid] < valor)
+                return Msg(playerid, COR_VERMELHO, "Saldo insuficiente.");
+
+            gDinheiroBanco[playerid] -= valor;
+            AddCash(playerid, valor);
+        }
+
+        SaveAccount(playerid);
+        return Msg(playerid, COR_VERDE, "Operacao bancaria concluida.");
+    }
+
+    if (dialogid == D_CONCE)
+    {
+        if (listitem < 0 || listitem >= 6)
+            return 1;
+
+        if (gVeiculo[playerid] != 0)
+            return Msg(playerid, COR_VERMELHO, "Voce ja possui um veiculo ativo.");
+
+        if (GetPlayerMoney(playerid) < gPrecoVeiculo[listitem])
+            return Msg(playerid, COR_VERMELHO, "Dinheiro insuficiente.");
+
+        AddCash(playerid, -gPrecoVeiculo[listitem]);
+
+        gVeiculo[playerid] = CreateVehicle(
+            gModeloVeiculo[listitem],
+            CONCE_X + 5.0, CONCE_Y, CONCE_Z,
+            90.0, 1, 1, -1);
+
+        gVeiculoModelo[playerid] = gModeloVeiculo[listitem];
+
+        if (gVeiculo[playerid] != INVALID_VEHICLE_ID)
+        {
+            gCombustivel[gVeiculo[playerid]] = 100;
+            PutPlayerInVehicle(playerid, gVeiculo[playerid], 0);
+        }
+
+        SaveAccount(playerid);
+        return Msg(playerid, COR_VERDE, "Veiculo comprado!");
+    }
+
+    if (dialogid == D_ROUPAS)
+    {
+        if (listitem < 0 || listitem >= 6)
+            return 1;
+
+        gSkin[playerid] = gSkinLoja[listitem];
+        SetPlayerSkin(playerid, gSkin[playerid]);
+        SaveAccount(playerid);
+
+        return Msg(playerid, COR_VERDE, "Visual atualizado!");
+    }
+
+    if (dialogid == D_LOJA)
+    {
+        if (listitem == 0)
+        {
+            if (GetPlayerMoney(playerid) < 20)
+                return Msg(playerid, COR_VERMELHO, "Dinheiro insuficiente.");
+
+            AddCash(playerid, -20);
+            gComida[playerid]++;
+        }
+        else if (listitem == 1)
+        {
+            if (GetPlayerMoney(playerid) < 15)
+                return Msg(playerid, COR_VERMELHO, "Dinheiro insuficiente.");
+
+            AddCash(playerid, -15);
+            gAgua[playerid]++;
+        }
+        else if (listitem == 2)
+        {
+            if (GetPlayerMoney(playerid) < 100)
+                return Msg(playerid, COR_VERMELHO, "Dinheiro insuficiente.");
+
+            AddCash(playerid, -100);
+            gKit[playerid]++;
+        }
+
+        SaveAccount(playerid);
+        return Msg(playerid, COR_VERDE, "Compra realizada.");
+    }
+
+    if (dialogid == D_POSTO)
+    {
+        if (!IsPlayerInAnyVehicle(playerid))
+            return Msg(playerid, COR_VERMELHO, "Entre em um veiculo primeiro.");
+
+        if (GetPlayerMoney(playerid) < 100)
+            return Msg(playerid, COR_VERMELHO, "Dinheiro insuficiente.");
+
+        new vid = GetPlayerVehicleID(playerid);
+
+        if (vid < 1 || vid >= MAX_VEH_SERVER)
+            return 1;
+
+        AddCash(playerid, -100);
+        gCombustivel[vid] = 100;
+
+        return Msg(playerid, COR_VERDE, "Veiculo abastecido.");
+    }
+
+    if (dialogid == D_CASA)
+    {
+        new id = gCasaAtual[playerid];
+
+        if (id < 0 || id >= MAX_CASAS)
+            return 1;
+
+        if (!gHouse[id][hBought])
+        {
+            if (GetPlayerMoney(playerid) < gHouse[id][hPrice])
+                return Msg(playerid, COR_VERMELHO, "Dinheiro insuficiente.");
+
+            AddCash(playerid, -gHouse[id][hPrice]);
+
+            format(gHouse[id][hOwner], MAX_PLAYER_NAME, "%s", gNome[playerid]);
+            gHouse[id][hBought] = true;
+            gHouse[id][hLocked] = false;
+
+            SaveHouses();
+            SaveAccount(playerid);
+
+            return Msg(playerid, COR_VERDE, "Casa comprada com sucesso!");
+        }
+
+        if (!strcmp(gHouse[id][hOwner], gNome[playerid], true))
+        {
+            if (listitem == 0)
+            {
+                SetPlayerVirtualWorld(playerid, id + 1);
+                SetPlayerPos(playerid, 2495.0, -1691.0, 1014.7);
+                gDentroCasa[playerid] = true;
+                gCasaAtual[playerid] = id;
+                return 1;
+            }
+
+            if (listitem == 1)
+            {
+                gHouse[id][hLocked] = !gHouse[id][hLocked];
+                SaveHouses();
+                return Msg(playerid, COR_VERDE,
+                    gHouse[id][hLocked] ? "Casa trancada." : "Casa destrancada.");
+            }
+
+            if (listitem == 2)
+            {
+                AddCash(playerid, gHouse[id][hPrice] / 2);
+                format(gHouse[id][hOwner], MAX_PLAYER_NAME, "Ninguem");
+                gHouse[id][hBought] = false;
+                gHouse[id][hLocked] = false;
+                SaveHouses();
+
+                return Msg(playerid, COR_VERDE, "Casa vendida.");
+            }
+        }
+        else
+        {
+            if (gHouse[id][hLocked])
+                return Msg(playerid, COR_VERMELHO, "Esta casa esta trancada.");
+
+            SetPlayerVirtualWorld(playerid, id + 1);
+            SetPlayerPos(playerid, 2495.0, -1691.0, 1014.7);
+            gDentroCasa[playerid] = true;
+            gCasaAtual[playerid] = id;
+        }
+
+        return 1;
+    }
+
+    if (dialogid == D_CELULAR)
+    {
+        if (listitem == 0)
+        {
+            ShowPlayerDialog(playerid, D_SMS_ID,
+                DIALOG_STYLE_INPUT, "{1ABC9C}SMS",
+                "Digite o ID do jogador:",
+                "Continuar", "Cancelar");
+        }
+        else
+        {
+            ShowPlayerDialog(playerid, D_ANUNCIO,
+                DIALOG_STYLE_INPUT, "{1ABC9C}Anuncio",
+                "Digite seu anuncio:",
+                "Enviar", "Cancelar");
+        }
+        return 1;
+    }
+
+    if (dialogid == D_SMS_ID)
+    {
+        gSmsAlvo[playerid] = strval(inputtext);
+
+        if (!IsPlayerConnected(gSmsAlvo[playerid]) ||
+            !gLogado[gSmsAlvo[playerid]])
+            return Msg(playerid, COR_VERMELHO, "Jogador nao encontrado.");
+
+        ShowPlayerDialog(playerid, D_SMS_TEXTO,
+            DIALOG_STYLE_INPUT, "{1ABC9C}SMS",
+            "Digite sua mensagem:",
+            "Enviar", "Cancelar");
+        return 1;
+    }
+
+    if (dialogid == D_SMS_TEXTO)
+    {
+        if (strlen(inputtext) < 1 || strlen(inputtext) > 100)
+            return Msg(playerid, COR_VERMELHO, "Mensagem invalida.");
+
+        new msg[144];
+        format(msg, sizeof msg, "[SMS] %s: %s",
+            gNome[playerid], inputtext);
+
+        Msg(gSmsAlvo[playerid], COR_CIANO, msg);
+        return Msg(playerid, COR_VERDE, "SMS enviado.");
+    }
+
+    if (dialogid == D_ANUNCIO)
+    {
+        if (strlen(inputtext) < 3 || strlen(inputtext) > 100)
+            return Msg(playerid, COR_VERMELHO, "Anuncio invalido.");
+
+        if (GetTickCount() - gAnuncioCooldown[playerid] < 60000)
+            return Msg(playerid, COR_VERMELHO,
+                "Aguarde antes de publicar outro anuncio.");
+
+        new msg[144];
+        format(msg, sizeof msg, "[ANUNCIO] %s: %s",
+            gNome[playerid], inputtext);
+
+        SendClientMessageToAll(COR_DOURADO, msg);
+        gAnuncioCooldown[playerid] = GetTickCount();
+
+        return 1;
+    }
+
+    if (dialogid == D_VEICULO)
+    {
+        if (listitem == 0)
+        {
+            if (!IsPlayerInAnyVehicle(playerid))
+                return Msg(playerid, COR_VERMELHO, "Entre em um veiculo.");
+
+            gMotor[playerid] = !gMotor[playerid];
+
+            return Msg(playerid, COR_VERDE,
+                gMotor[playerid] ? "Motor ligado." : "Motor desligado.");
+        }
+
+        if (listitem == 1)
+        {
+            gTrancado[playerid] = !gTrancado[playerid];
+
+            return Msg(playerid, COR_VERDE,
+                gTrancado[playerid] ? "Veiculo trancado." : "Veiculo destrancado.");
+        }
+
+        if (listitem == 2)
+        {
+            if (gVeiculo[playerid])
+            {
+                DestroyVehicle(gVeiculo[playerid]);
+                gVeiculo[playerid] = 0;
+                gVeiculoModelo[playerid] = 0;
+                return Msg(playerid, COR_VERDE, "Veiculo guardado.");
+            }
+
+            return Msg(playerid, COR_VERMELHO, "Voce nao possui veiculo.");
+        }
+
+        return 1;
+    }
+
+    if (dialogid == D_DONO_LOGIN)
+    {
+        if (!IsOwnerName(playerid) || strcmp(inputtext, DONO_SENHA, false))
+            return Msg(playerid, COR_VERMELHO, "Senha administrativa incorreta.");
+
+        gDono[playerid] = true;
+        gDonoAut[playerid] = true;
+
+        ShowPlayerDialog(playerid, D_DONO,
+            DIALOG_STYLE_LIST, "{F1C40F}Painel DONO",
+            "Curar\nReparar veiculo\nTeleportar\nDar dinheiro\nAnunciar\nCriar veiculo",
+            "Selecionar", "Fechar");
+
+        return 1;
+    }
+
+    if (dialogid == D_DONO)
+    {
+        if (!gDonoAut[playerid])
+            return 1;
+
+        if (listitem == 0)
+        {
+            SetPlayerHealth(playerid, 100.0);
+            SetPlayerArmour(playerid, 100.0);
+            Msg(playerid, COR_VERDE, "Voce foi curado.");
+        }
+        else if (listitem == 1)
+        {
+            if (IsPlayerInAnyVehicle(playerid))
+                RepairVehicle(GetPlayerVehicleID(playerid));
+        }
+        else if (listitem == 2)
+        {
+            ShowPlayerDialog(playerid, D_DONO_TP,
+                DIALOG_STYLE_LIST, "{F1C40F}Teleportes",
+                "Prefeitura\nBanco\nConcessionaria\nTropa ZK",
+                "Ir", "Voltar");
+        }
+        else if (listitem == 3)
+        {
+            ShowPlayerDialog(playerid, D_ADMIN_ID,
+                DIALOG_STYLE_INPUT, "{F1C40F}Dar dinheiro",
+                "Digite o ID do jogador:",
+                "Continuar", "Cancelar");
+        }
+        else if (listitem == 4)
+        {
+            ShowPlayerDialog(playerid, D_ADMIN_ANUNCIO,
+                DIALOG_STYLE_INPUT, "{F1C40F}Anuncio global",
+                "Digite o anuncio:",
+                "Enviar", "Cancelar");
+        }
+        else if (listitem == 5)
+        {
+            ShowPlayerDialog(playerid, D_DONO_VEH,
+                DIALOG_STYLE_LIST, "{F1C40F}Veiculos especiais",
+                "Infernus\nNRG-500\nElegy\nTurismo\nMaverick",
+                "Criar", "Voltar");
+        }
+
+        return 1;
+    }
+
+    if (dialogid == D_DONO_TP)
+    {
+        switch (listitem)
+        {
+            case 0: SetPlayerPos(playerid, SPAWN_X, SPAWN_Y, SPAWN_Z);
+            case 1: SetPlayerPos(playerid, BANCO_X, BANCO_Y, BANCO_Z);
+            case 2: SetPlayerPos(playerid, CONCE_X, CONCE_Y, CONCE_Z);
+            case 3: SetPlayerPos(playerid, DROGA_X, DROGA_Y, DROGA_Z);
+        }
+        SetPlayerVirtualWorld(playerid, 0);
+        return 1;
+    }
+
+    if (dialogid == D_ADMIN_ID)
+    {
+        gAdminTarget[playerid] = strval(inputtext);
+
+        if (!IsPlayerConnected(gAdminTarget[playerid]))
+            return Msg(playerid, COR_VERMELHO, "Jogador nao encontrado.");
+
+        ShowPlayerDialog(playerid, D_ADMIN_VALOR,
+            DIALOG_STYLE_INPUT, "{F1C40F}Dinheiro",
+            "Digite o valor:",
+            "Enviar", "Cancelar");
+        return 1;
+    }
+
+    if (dialogid == D_ADMIN_VALOR)
+    {
+        new valor = strval(inputtext);
+
+        if (valor <= 0 || valor > 100000000)
+            return Msg(playerid, COR_VERMELHO, "Valor invalido.");
+
+        AddCash(gAdminTarget[playerid], valor);
+        SaveAccount(gAdminTarget[playerid]);
+
+        return Msg(playerid, COR_VERDE, "Dinheiro entregue.");
+    }
+
+    if (dialogid == D_ADMIN_ANUNCIO)
+    {
+        if (strlen(inputtext) < 1 || strlen(inputtext) > 100)
+            return 1;
+
+        new msg[144];
+        format(msg, sizeof msg, "[ZK RP - DONO] %s", inputtext);
+        SendClientMessageToAll(COR_DOURADO, msg);
+        return 1;
+    }
+
+    if (dialogid == D_DONO_VEH)
+    {
+        if (listitem < 0 || listitem >= 5)
+            return 1;
+
+        new modelos[5] = {411, 522, 560, 451, 487};
+
+        new Float:x, Float:y, Float:z, Float:a;
+        GetPlayerPos(playerid, x, y, z);
+        GetPlayerFacingAngle(playerid, a);
+
+        new veh = CreateVehicle(modelos[listitem],
+            x + 3.0, y, z, a, 1, 1, -1);
+
+        PutPlayerInVehicle(playerid, veh, 0);
+        return 1;
+    }
+
+    return 0;
+}
+
+// ============================================================================
+// TIMERS
+// ============================================================================
+
+public TimerPayday()
+{
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (!IsValidLogged(i))
+            continue;
+
+        new salario = 150 + (gNivel[i] * 25);
+
+        AddCash(i, salario);
+        gXP[i] += 5;
+
+        if (gXP[i] >= gNivel[i] * 100)
+        {
+            gXP[i] = 0;
+            gNivel[i]++;
+
+            Msg(i, COR_DOURADO,
+                "Parabens! Voce subiu de nivel.");
+        }
+
+        Msg(i, COR_VERDE,
+            "[PAYDAY] Seu salario foi depositado.");
+
+        SaveAccount(i);
+        UpdateHUD(i);
+    }
+
+    return 1;
+}
+
+public TimerNeeds()
+{
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (!IsValidLogged(i))
+            continue;
+
+        if (gFome[i] > 0) gFome[i]--;
+        if (gSede[i] > 0) gSede[i]--;
+
+        if (gFome[i] <= 0 || gSede[i] <= 0)
+        {
+            new Float:health;
+            GetPlayerHealth(i, health);
+
+            health -= 5.0;
+
+            if (health < 5.0)
+                health = 5.0;
+
+            SetPlayerHealth(i, health);
+        }
+
+        UpdateHUD(i);
+    }
+
+    return 1;
+}
+
+public TimerHUD()
+{
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (IsValidLogged(i))
+            UpdateHUD(i);
+    }
+
+    return 1;
+}
