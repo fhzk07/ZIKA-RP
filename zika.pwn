@@ -7,7 +7,7 @@
 #define COR_BRANCO      0xFFFFFFFF
 #define COR_DOURADO     0xFFD700FF
 
-#define SENHA_DONO "fabricio333@@"
+#define SENHA_DONO "fhzk333@@"
 
 #define PAGAMENTO_ENTREGA 250
 #define PRECO_ROUPA 500
@@ -19,6 +19,12 @@
 #define DIALOG_DONO_PAINEL 1004
 #define DIALOG_DONO_VEICULOS 1005
 #define DIALOG_DONO_TELEPORTES 1006
+#define DIALOG_CASA 1007
+
+#define MAX_CASAS 3
+#define PRECO_CASA_1 15000
+#define PRECO_CASA_2 25000
+#define PRECO_CASA_3 40000
 
 #define AGENCIA_X 1477.5
 #define AGENCIA_Y -1771.0
@@ -53,6 +59,39 @@ new Float:MarcacaoY[MAX_PLAYERS];
 new Float:MarcacaoZ[MAX_PLAYERS];
 new bool:TemMarcacao[MAX_PLAYERS];
 
+// SISTEMA DE CASAS
+new Float:CasaX[MAX_CASAS] = {
+    2495.0,
+    2468.0,
+    2447.0
+};
+
+new Float:CasaY[MAX_CASAS] = {
+    -1691.2,
+    -1698.0,
+    -1702.0
+};
+
+new Float:CasaZ[MAX_CASAS] = {
+    13.5,
+    13.5,
+    13.5
+};
+
+new PrecoCasa[MAX_CASAS] = {
+    PRECO_CASA_1,
+    PRECO_CASA_2,
+    PRECO_CASA_3
+};
+
+new bool:CasaComprada[MAX_CASAS];
+new bool:CasaTrancada[MAX_CASAS];
+new CasaDono[MAX_CASAS][MAX_PLAYER_NAME];
+new Text3D:TextoCasa[MAX_CASAS];
+
+new CasaAtual[MAX_PLAYERS];
+new bool:JogadorDentroCasa[MAX_PLAYERS];
+
 main()
 {
     print("ZIKA RP - Servidor iniciado!");
@@ -66,6 +105,14 @@ stock bool:EhDono(playerid)
     return (strcmp(nome, "Fhzk", true) == 0);
 }
 
+stock bool:EhDonoDaCasa(playerid, casaid)
+{
+    new nome[MAX_PLAYER_NAME];
+    GetPlayerName(playerid, nome, sizeof(nome));
+
+    return (strcmp(nome, CasaDono[casaid], true) == 0);
+}
+
 stock MostrarPainelDono(playerid)
 {
     ShowPlayerDialog(
@@ -77,6 +124,217 @@ stock MostrarPainelDono(playerid)
         "Selecionar",
         "Fechar"
     );
+    return 1;
+}
+
+// ATUALIZAR PLACA DA CASA
+stock AtualizarTextoCasa(casaid)
+{
+    new texto[160];
+
+    if (!CasaComprada[casaid])
+    {
+        format(
+            texto,
+            sizeof(texto),
+            "{00E5FF}CASA A VENDA\n{FFFFFF}Preco: $%d\nDigite /casa",
+            PrecoCasa[casaid]
+        );
+    }
+    else
+    {
+        if (CasaTrancada[casaid])
+        {
+            format(
+                texto,
+                sizeof(texto),
+                "{FFD700}CASA PARTICULAR\n{FFFFFF}Dono: %s\n{FF3333}PORTA TRANCADA",
+                CasaDono[casaid]
+            );
+        }
+        else
+        {
+            format(
+                texto,
+                sizeof(texto),
+                "{FFD700}CASA PARTICULAR\n{FFFFFF}Dono: %s\n{00FF00}PORTA DESTRANCADA",
+                CasaDono[casaid]
+            );
+        }
+    }
+
+    Update3DTextLabelText(
+        TextoCasa[casaid],
+        COR_CIANO,
+        texto
+    );
+
+    return 1;
+}
+
+// ENCONTRAR CASA PROXIMA
+stock EncontrarCasaProxima(playerid)
+{
+    for (new i = 0; i < MAX_CASAS; i++)
+    {
+        if (IsPlayerInRangeOfPoint(
+            playerid,
+            4.0,
+            CasaX[i],
+            CasaY[i],
+            CasaZ[i]
+        ))
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+// ENTRAR NA CASA
+stock EntrarCasa(playerid, casaid)
+{
+    if (!CasaComprada[casaid])
+        return 1;
+
+    if (CasaTrancada[casaid] && !EhDonoDaCasa(playerid, casaid))
+    {
+        SendClientMessage(
+            playerid,
+            COR_VERMELHO,
+            "Esta casa esta trancada!"
+        );
+        return 1;
+    }
+
+    if (IsPlayerInAnyVehicle(playerid))
+    {
+        RemovePlayerFromVehicle(playerid);
+    }
+
+    CasaAtual[playerid] = casaid;
+    JogadorDentroCasa[playerid] = true;
+
+    SetPlayerInterior(playerid, 1);
+    SetPlayerVirtualWorld(playerid, casaid + 1);
+
+    SetPlayerPos(
+        playerid,
+        223.0,
+        1287.0,
+        1082.1
+    );
+
+    SetPlayerFacingAngle(playerid, 0.0);
+
+    SendClientMessage(
+        playerid,
+        COR_VERDE,
+        "Voce entrou na casa!"
+    );
+
+    SendClientMessage(
+        playerid,
+        COR_CIANO,
+        "Digite /casa para sair."
+    );
+
+    return 1;
+}
+
+// SAIR DA CASA
+stock SairCasa(playerid)
+{
+    if (!JogadorDentroCasa[playerid] || CasaAtual[playerid] == -1)
+    {
+        return 1;
+    }
+
+    new casaid = CasaAtual[playerid];
+
+    SetPlayerInterior(playerid, 0);
+    SetPlayerVirtualWorld(playerid, 0);
+
+    SetPlayerPos(
+        playerid,
+        CasaX[casaid],
+        CasaY[casaid],
+        CasaZ[casaid]
+    );
+
+    CasaAtual[playerid] = -1;
+    JogadorDentroCasa[playerid] = false;
+
+    SendClientMessage(
+        playerid,
+        COR_CIANO,
+        "Voce saiu da casa."
+    );
+
+    return 1;
+}
+
+// MOSTRAR MENU DA CASA
+stock MostrarMenuCasa(playerid, casaid)
+{
+    new titulo[80];
+    new texto[180];
+
+    format(
+        titulo,
+        sizeof(titulo),
+        "CASA %d - ZIKA RP",
+        casaid + 1
+    );
+
+    if (!CasaComprada[casaid])
+    {
+        format(
+            texto,
+            sizeof(texto),
+            "Comprar casa por $%d",
+            PrecoCasa[casaid]
+        );
+    }
+    else if (EhDonoDaCasa(playerid, casaid))
+    {
+        if (CasaTrancada[casaid])
+        {
+            format(
+                texto,
+                sizeof(texto),
+                "Entrar na casa\nDestrancar porta"
+            );
+        }
+        else
+        {
+            format(
+                texto,
+                sizeof(texto),
+                "Entrar na casa\nTrancar porta"
+            );
+        }
+    }
+    else
+    {
+        format(
+            texto,
+            sizeof(texto),
+            "Entrar na casa"
+        );
+    }
+
+    ShowPlayerDialog(
+        playerid,
+        DIALOG_CASA,
+        DIALOG_STYLE_LIST,
+        titulo,
+        texto,
+        "Selecionar",
+        "Fechar"
+    );
+
     return 1;
 }
 
@@ -124,6 +382,27 @@ public OnGameModeInit()
         0
     );
 
+    // CRIAR AS TRES CASAS
+    for (new i = 0; i < MAX_CASAS; i++)
+    {
+        CasaComprada[i] = false;
+        CasaTrancada[i] = false;
+        CasaDono[i][0] = '\0';
+
+        TextoCasa[i] = Create3DTextLabel(
+            "CASA A VENDA",
+            COR_CIANO,
+            CasaX[i],
+            CasaY[i],
+            CasaZ[i] + 1.0,
+            15.0,
+            0,
+            0
+        );
+
+        AtualizarTextoCasa(i);
+    }
+
     return 1;
 }
 
@@ -137,6 +416,9 @@ public OnPlayerConnect(playerid)
     EntregaEtapa[playerid] = 0;
     VeiculoConcessionaria[playerid] = INVALID_VEHICLE_ID;
     VeiculoDono[playerid] = INVALID_VEHICLE_ID;
+
+    CasaAtual[playerid] = -1;
+    JogadorDentroCasa[playerid] = false;
 
     TagDono[playerid] = Text3D:INVALID_3DTEXT_ID;
 
@@ -161,6 +443,21 @@ public OnPlayerConnect(playerid)
         0,
         MAPICON_GLOBAL
     );
+
+    // ICONES DAS CASAS
+    for (new i = 0; i < MAX_CASAS; i++)
+    {
+        SetPlayerMapIcon(
+            playerid,
+            20 + i,
+            CasaX[i],
+            CasaY[i],
+            CasaZ[i],
+            31,
+            0,
+            MAPICON_GLOBAL
+        );
+    }
 
     if (EhDono(playerid))
     {
@@ -521,6 +818,116 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         return 1;
     }
 
+    // SISTEMA DE CASAS
+    if (dialogid == DIALOG_CASA)
+    {
+        if (!response)
+            return 1;
+
+        new casaid = EncontrarCasaProxima(playerid);
+
+        if (casaid == -1)
+        {
+            SendClientMessage(
+                playerid,
+                COR_VERMELHO,
+                "Voce nao esta perto de uma casa."
+            );
+            return 1;
+        }
+
+        if (listitem == 0)
+        {
+            if (!CasaComprada[casaid])
+            {
+                if (GetPlayerMoney(playerid) < PrecoCasa[casaid])
+                {
+                    SendClientMessage(
+                        playerid,
+                        COR_VERMELHO,
+                        "Voce nao tem dinheiro suficiente para comprar esta casa."
+                    );
+                    return 1;
+                }
+
+                new nome[MAX_PLAYER_NAME];
+                GetPlayerName(playerid, nome, sizeof(nome));
+
+                GivePlayerMoney(playerid, -PrecoCasa[casaid]);
+
+                CasaComprada[casaid] = true;
+                CasaTrancada[casaid] = false;
+
+                format(
+                    CasaDono[casaid],
+                    MAX_PLAYER_NAME,
+                    "%s",
+                    nome
+                );
+
+                AtualizarTextoCasa(casaid);
+
+                SendClientMessage(
+                    playerid,
+                    COR_VERDE,
+                    "Parabens! Voce comprou sua casa."
+                );
+
+                SendClientMessage(
+                    playerid,
+                    COR_CIANO,
+                    "Use /casa perto da porta para entrar ou sair."
+                );
+
+                return 1;
+            }
+
+            EntrarCasa(playerid, casaid);
+            return 1;
+        }
+
+        if (listitem == 1)
+        {
+            if (!CasaComprada[casaid])
+                return 1;
+
+            if (!EhDonoDaCasa(playerid, casaid))
+            {
+                SendClientMessage(
+                    playerid,
+                    COR_VERMELHO,
+                    "Somente o proprietario pode trancar esta casa."
+                );
+                return 1;
+            }
+
+            CasaTrancada[casaid] = !CasaTrancada[casaid];
+
+            AtualizarTextoCasa(casaid);
+
+            if (CasaTrancada[casaid])
+            {
+                SendClientMessage(
+                    playerid,
+                    COR_DOURADO,
+                    "Casa trancada com sucesso!"
+                );
+            }
+            else
+            {
+                SendClientMessage(
+                    playerid,
+                    COR_VERDE,
+                    "Casa destrancada com sucesso!"
+                );
+            }
+
+            return 1;
+        }
+
+        return 1;
+    }
+
     // LOGIN DO PROPRIETARIO
     if (dialogid == DIALOG_DONO_LOGIN)
     {
@@ -831,6 +1238,89 @@ public OnPlayerCommandText(playerid, cmdtext[])
         return 1;
     }
 
+    // COMANDO DAS CASAS
+    if (strcmp(cmdtext, "/casa", true) == 0)
+    {
+        if (JogadorDentroCasa[playerid])
+        {
+            SairCasa(playerid);
+            return 1;
+        }
+
+        new casaid = EncontrarCasaProxima(playerid);
+
+        if (casaid == -1)
+        {
+            SendClientMessage(
+                playerid,
+                COR_VERMELHO,
+                "Voce precisa estar perto de uma casa."
+            );
+            return 1;
+        }
+
+        MostrarMenuCasa(playerid, casaid);
+        return 1;
+    }
+
+    // VENDER CASA
+    if (strcmp(cmdtext, "/vendercasa", true) == 0)
+    {
+        new casaid = -1;
+
+        if (JogadorDentroCasa[playerid])
+        {
+            casaid = CasaAtual[playerid];
+        }
+        else
+        {
+            casaid = EncontrarCasaProxima(playerid);
+        }
+
+        if (casaid == -1)
+        {
+            SendClientMessage(
+                playerid,
+                COR_VERMELHO,
+                "Va ate a sua casa para vende-la."
+            );
+            return 1;
+        }
+
+        if (!CasaComprada[casaid] || !EhDonoDaCasa(playerid, casaid))
+        {
+            SendClientMessage(
+                playerid,
+                COR_VERMELHO,
+                "Esta casa nao pertence a voce."
+            );
+            return 1;
+        }
+
+        new reembolso = PrecoCasa[casaid] / 2;
+
+        GivePlayerMoney(playerid, reembolso);
+
+        CasaComprada[casaid] = false;
+        CasaTrancada[casaid] = false;
+        CasaDono[casaid][0] = '\0';
+
+        AtualizarTextoCasa(casaid);
+
+        if (JogadorDentroCasa[playerid])
+        {
+            SairCasa(playerid);
+        }
+
+        SendClientMessage(
+            playerid,
+            COR_VERDE,
+            "Casa vendida! Voce recebeu metade do valor pago."
+        );
+
+        return 1;
+    }
+
     if (strcmp(cmdtext, "/pos", true) == 0)
     {
         new Float:x, Float:y, Float:z, Float:angulo;
@@ -855,7 +1345,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
         SendClientMessage(
             playerid,
             COR_CIANO,
-            "COMANDOS: /empregos /parar /roupas /concessionaria /pos /dono /vida /colete /spawn"
+            "COMANDOS: /empregos /parar /roupas /concessionaria /pos /dono /vida /colete /spawn /casa /vendercasa"
         );
         return 1;
     }
@@ -1025,6 +1515,9 @@ public OnPlayerDisconnect(playerid, reason)
     VeiculoConcessionaria[playerid] = INVALID_VEHICLE_ID;
     VeiculoDono[playerid] = INVALID_VEHICLE_ID;
     EntregaEtapa[playerid] = 0;
+
+    CasaAtual[playerid] = -1;
+    JogadorDentroCasa[playerid] = false;
 
     return 1;
 }
