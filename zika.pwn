@@ -6,28 +6,6 @@
 // SA-MP / open.mp - base nativa
 // ============================================================================
 
-#define ZK_SERVIDOR "ZK RP | Mobile Roleplay"
-#define ZK_DONO "Fhzk"
-#define ZK_SENHA_DONO "fhzk333@"
-
-#define COR_BRANCO 0xFFFFFFFF
-#define COR_ROXO 0x9B5CFFFF
-#define COR_ROXO_ESCURO 0x241A35FF
-#define COR_VERDE 0x20D879FF
-#define COR_VERMELHO 0xFF4444FF
-#define COR_CIANO 0x00E5FFFF
-#define COR_DOURADO 0xFFD700FF
-#define COR_CINZA 0xAAB0BBFF
-
-#define SPAWN_X 1481.0
-#define SPAWN_Y -1771.0
-#define SPAWN_Z 18.8
-#define SPAWN_A 90.0
-
-#define DINHEIRO_INICIAL 2500
-#define PRECO_CNH 1500
-#define PRECO_ROUPA 500
-#define MAX_CASAS 5
 
 #define DIALOG_REGISTRO 1000
 #define DIALOG_LOGIN 1001
@@ -37,22 +15,12 @@
 #define DIALOG_GPS 1005
 #define DIALOG_BANCO 1006
 #define DIALOG_DONO_LOGIN 1007
-#define DIALOG_DONO_PAINEL 1008
-#define DIALOG_CASA 1011
+#define DIALOG_DONO 1008
+#define DIALOG_CASAS 1009
 #define DIALOG_MERCADO 1012
 #define DIALOG_ROUPAS 1013
 #define DIALOG_VEICULO 1014
-
-#define ESTADO_DESCONECTADO 0
-#define ESTADO_REGISTRO 1
-#define ESTADO_LOGIN 2
-#define ESTADO_JOGANDO 3
-
-#define EMPREGO_DESEMPREGADO 0
-#define EMPREGO_ENTREGADOR 1
-#define EMPREGO_ONIBUS 2
-#define EMPREGO_POLICIAL 3
-#define EMPREGO_MECANICO 4
+#define DIALOG_STATUS 1015
 
 enum E_CASA
 {
@@ -135,7 +103,6 @@ stock InicializarDados(playerid)
     Fome[playerid] = 100;
     Sede[playerid] = 100;
 
-    Emprego[playerid] = EMPREGO_DESEMPREGADO;
     Skin[playerid] = 7;
     CNH[playerid] = 0;
 
