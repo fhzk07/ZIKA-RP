@@ -194,3 +194,304 @@ stock SalvarConta(playerid)
     fclose(conta);
     return 1;
 }
+
+// ============================================================
+// PARTE 2/4 - CARREGAMENTO, LOGIN E MENUS
+// ============================================================
+
+stock CarregarConta(playerid)
+{
+    new arquivo[64];
+    ArquivoConta(playerid, arquivo, sizeof(arquivo));
+
+    if (!fexist(arquivo))
+        return 0;
+
+    new File:conta = fopen(arquivo, io_read);
+    if (!conta)
+        return 0;
+
+    new linha[128];
+
+    fread(conta, linha);
+    format(Dados[playerid][SenhaHash], 65, "%s", linha);
+
+    fread(conta, linha);
+    Dados[playerid][Dinheiro] = strval(linha);
+
+    fread(conta, linha);
+    Dados[playerid][Banco] = strval(linha);
+
+    fread(conta, linha);
+    Dados[playerid][Nivel] = strval(linha);
+
+    fread(conta, linha);
+    Dados[playerid][Experiencia] = strval(linha);
+
+    fread(conta, linha);
+    Dados[playerid][Fome] = strval(linha);
+
+    fread(conta, linha);
+    Dados[playerid][Sede] = strval(linha);
+
+    fread(conta, linha);
+    Dados[playerid][Emprego] = strval(linha);
+
+    fread(conta, linha);
+    Dados[playerid][Skin] = strval(linha);
+
+    fread(conta, linha);
+    Dados[playerid][CNH] = strval(linha);
+
+    fread(conta, linha);
+    Dados[playerid][Casa] = strval(linha);
+
+    fclose(conta);
+    return 1;
+}
+
+stock MostrarRegistro(playerid)
+{
+    ShowPlayerDialog(playerid, DIALOG_REGISTRO,
+        DIALOG_STYLE_PASSWORD,
+        "{9B5CFF}ZK RP - Registro",
+        "Bem-vindo ao ZK RP!\n\nCrie uma senha para sua conta:",
+        "Registrar", "Sair");
+    return 1;
+}
+
+stock MostrarLogin(playerid)
+{
+    ShowPlayerDialog(playerid, DIALOG_LOGIN,
+        DIALOG_STYLE_PASSWORD,
+        "{9B5CFF}ZK RP - Login",
+        "Digite sua senha para entrar no servidor:",
+        "Entrar", "Sair");
+    return 1;
+}
+
+stock AbrirMenu(playerid)
+{
+    ShowPlayerDialog(playerid, DIALOG_MENU,
+        DIALOG_STYLE_LIST,
+        "{9B5CFF}ZK RP - Menu principal",
+        "Meu personagem\nEmpregos\nGPS\nBanco\nMercado\nRoupas e CNH\nImoveis\nVeiculo",
+        "Selecionar", "Fechar");
+    return 1;
+}
+
+stock AbrirEmpregos(playerid)
+{
+    ShowPlayerDialog(playerid, DIALOG_EMPREGOS,
+        DIALOG_STYLE_LIST,
+        "{9B5CFF}Central de empregos",
+        "Entregador\nMotorista de onibus\nPolicial\nMecanico\nPedir demissao",
+        "Selecionar", "Voltar");
+    return 1;
+}
+
+stock AbrirGPS(playerid)
+{
+    ShowPlayerDialog(playerid, DIALOG_GPS,
+        DIALOG_STYLE_LIST,
+        "{9B5CFF}GPS Mobile",
+        "Prefeitura\nAgencia de empregos\nConcessionaria\nLoja de roupas\nHospital\nMinha casa\nCancelar GPS",
+        "Marcar", "Voltar");
+    return 1;
+}
+
+stock AbrirBanco(playerid)
+{
+    format(StringTemporaria, sizeof(StringTemporaria),
+        "Depositar $500\nDepositar $1000\nSacar $500\nSacar $1000\nConsultar saldo\n\nDinheiro: $%d | Banco: $%d",
+        Dados[playerid][Dinheiro],
+        Dados[playerid][Banco]);
+
+    ShowPlayerDialog(playerid, DIALOG_BANCO,
+        DIALOG_STYLE_LIST,
+        "{9B5CFF}Banco ZK",
+        StringTemporaria,
+        "Selecionar", "Voltar");
+    return 1;
+}
+
+stock AbrirCasas(playerid)
+{
+    ShowPlayerDialog(playerid, DIALOG_CASAS,
+        DIALOG_STYLE_LIST,
+        "{9B5CFF}Imoveis disponiveis",
+        "Casa 01 - $15.000\nCasa 02 - $25.000\nCasa 03 - $40.000\nCasa 04 - $50.000\nCasa 05 - $65.000",
+        "Comprar", "Voltar");
+    return 1;
+}
+
+// ============================================================
+// SISTEMA DE CASAS
+// ============================================================
+
+stock InicializarCasas()
+{
+    Casas[0][CasaX] = 2495.0;
+    Casas[0][CasaY] = -1691.2;
+    Casas[0][CasaZ] = 13.5;
+    Casas[0][Preco] = 15000;
+
+    Casas[1][CasaX] = 2468.0;
+    Casas[1][CasaY] = -1698.0;
+    Casas[1][CasaZ] = 13.5;
+    Casas[1][Preco] = 25000;
+
+    Casas[2][CasaX] = 2447.0;
+    Casas[2][CasaY] = -1702.0;
+    Casas[2][CasaZ] = 13.5;
+    Casas[2][Preco] = 40000;
+
+    Casas[3][CasaX] = 2380.0;
+    Casas[3][CasaY] = -1710.0;
+    Casas[3][CasaZ] = 13.5;
+    Casas[3][Preco] = 50000;
+
+    Casas[4][CasaX] = 2310.0;
+    Casas[4][CasaY] = -1640.0;
+    Casas[4][CasaZ] = 14.0;
+    Casas[4][Preco] = 65000;
+
+    for (new i = 0; i < MAX_CASAS; i++)
+    {
+        Casas[i][Comprada] = false;
+        Casas[i][Dono][0] = EOS;
+    }
+    return 1;
+}
+
+// ============================================================
+// SISTEMA DE EXPERIENCIA
+// ============================================================
+
+stock VerificarNivel(playerid)
+{
+    while (Dados[playerid][Experiencia] >= Dados[playerid][Nivel] * 100)
+    {
+        Dados[playerid][Experiencia] -= Dados[playerid][Nivel] * 100;
+        Dados[playerid][Nivel]++;
+
+        format(StringTemporaria, sizeof(StringTemporaria),
+            "Parabens! Voce alcancou o nivel %d.",
+            Dados[playerid][Nivel]);
+
+        Mensagem(playerid, COR_DOURADO, StringTemporaria);
+    }
+    return 1;
+}
+
+// ============================================================
+// SISTEMA DE TRABALHO
+// ============================================================
+
+stock IniciarTrabalho(playerid)
+{
+    if (Dados[playerid][Emprego] == EMPREGO_NENHUM)
+    {
+        Mensagem(playerid, COR_VERMELHO,
+            "Voce precisa escolher um emprego primeiro.");
+        return 0;
+    }
+
+    if (Dados[playerid][Trabalhando])
+    {
+        Mensagem(playerid, COR_VERMELHO,
+            "Voce ja esta trabalhando.");
+        return 0;
+    }
+
+    Dados[playerid][Trabalhando] = true;
+
+    Mensagem(playerid, COR_VERDE,
+        "Trabalho iniciado! Use /finalizar para receber.");
+
+    if (Dados[playerid][Emprego] == EMPREGO_ENTREGADOR)
+    {
+        new Float:x, Float:y, Float:z;
+        GetPlayerPos(playerid, x, y, z);
+
+        Dados[playerid][VeiculoTrabalho] =
+            CreateVehicle(462, x + 3.0, y, z, 90.0, 1, 1, -1);
+
+        if (Dados[playerid][VeiculoTrabalho] != INVALID_VEHICLE_ID)
+        {
+            PutPlayerInVehicle(playerid,
+                Dados[playerid][VeiculoTrabalho], 0);
+        }
+    }
+    return 1;
+}
+
+stock FinalizarTrabalho(playerid)
+{
+    if (!Dados[playerid][Trabalhando])
+    {
+        Mensagem(playerid, COR_VERMELHO,
+            "Voce nao iniciou um trabalho.");
+        return 0;
+    }
+
+    Dados[playerid][Trabalhando] = false;
+
+    new recompensa = 500 + random(501);
+
+    Dados[playerid][Dinheiro] += recompensa;
+    Dados[playerid][Experiencia] += 25;
+
+    format(StringTemporaria, sizeof(StringTemporaria),
+        "Trabalho finalizado! Voce recebeu $%d.",
+        recompensa);
+
+    Mensagem(playerid, COR_VERDE, StringTemporaria);
+
+    if (Dados[playerid][VeiculoTrabalho] != INVALID_VEHICLE_ID)
+    {
+        DestroyVehicle(Dados[playerid][VeiculoTrabalho]);
+        Dados[playerid][VeiculoTrabalho] = INVALID_VEHICLE_ID;
+    }
+
+    VerificarNivel(playerid);
+    SalvarConta(playerid);
+    return 1;
+}
+
+// ============================================================
+// PAINEL DO DONO
+// ============================================================
+
+stock AbrirPainelDono(playerid)
+{
+    if (!EhDono(playerid))
+    {
+        Mensagem(playerid, COR_VERMELHO,
+            "Somente o dono pode acessar este painel.");
+        return 0;
+    }
+
+    ShowPlayerDialog(playerid, DIALOG_DONO,
+        DIALOG_STYLE_LIST,
+        "{FFD700}[DONO] Painel administrativo",
+        "Criar Sultan\nCriar Infernus\nCriar NRG-500\nIr para Prefeitura\nIr para Agencia\nRecuperar vida\nReceber $10.000\nAtivar jetpack\nDesativar jetpack",
+        "Executar", "Fechar");
+    return 1;
+}
+
+stock CriarVeiculoDono(playerid, modelo)
+{
+    new Float:x, Float:y, Float:z, Float:a;
+
+    GetPlayerPos(playerid, x, y, z);
+    GetPlayerFacingAngle(playerid, a);
+
+    new veiculo = CreateVehicle(modelo,
+        x + 3.0, y, z, a, -1, -1, -1);
+
+    if (veiculo != INVALID_VEHICLE_ID)
+        PutPlayerInVehicle(playerid, veiculo, 0);
+
+    return 1;
+}
