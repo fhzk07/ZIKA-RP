@@ -6,8 +6,10 @@
 #define COR_VERMELHO    0xFF3333FF
 #define COR_BRANCO      0xFFFFFFFF
 #define COR_DOURADO     0xFFD700FF
+#define COR_ROXO        0x9B5CFFFF
 
-#define SENHA_DONO "fhzk333@@"
+// COLOQUE UMA SENHA NOVA AQUI
+#define SENHA_DONO "fhzk333@"
 
 #define PAGAMENTO_ENTREGA 250
 #define PRECO_ROUPA 500
@@ -42,6 +44,11 @@
 
 new Text:LogoZK;
 new Text:LogoRP;
+new Text:HUDNome;
+
+new PlayerText:HUDDinheiro[MAX_PLAYERS];
+new PlayerText:HUDVida[MAX_PLAYERS];
+
 new Actor:FuncionarioEmpregos;
 new Text3D:TextoAgencia;
 new Text3D:TagDono[MAX_PLAYERS];
@@ -61,6 +68,7 @@ new Float:MarcacaoZ[MAX_PLAYERS];
 new bool:TemMarcacao[MAX_PLAYERS];
 
 // SISTEMA DE CASAS
+
 new Float:CasaX[MAX_CASAS] = {
     2495.0,
     2468.0,
@@ -93,10 +101,14 @@ new Text3D:TextoCasa[MAX_CASAS];
 new CasaAtual[MAX_PLAYERS];
 new bool:JogadorDentroCasa[MAX_PLAYERS];
 
+forward AtualizarHUDGeral();
+
 main()
 {
     print("ZK RP - Servidor iniciado!");
 }
+
+// VERIFICAR PROPRIETARIO
 
 stock bool:EhDono(playerid)
 {
@@ -114,6 +126,65 @@ stock bool:EhDonoDaCasa(playerid, casaid)
     return (strcmp(nome, CasaDono[casaid], true) == 0);
 }
 
+// ATUALIZAR HUD INDIVIDUAL
+
+stock AtualizarHUD(playerid)
+{
+    if (!IsPlayerConnected(playerid))
+        return 1;
+
+    new texto[64];
+    new Float:vida;
+    new Float:colete;
+
+    format(
+        texto,
+        sizeof(texto),
+        "DINHEIRO: $%d",
+        GetPlayerMoney(playerid)
+    );
+
+    PlayerTextDrawSetString(
+        playerid,
+        HUDDinheiro[playerid],
+        texto
+    );
+
+    GetPlayerHealth(playerid, vida);
+    GetPlayerArmour(playerid, colete);
+
+    format(
+        texto,
+        sizeof(texto),
+        "VIDA: %.0f  COLETE: %.0f",
+        vida,
+        colete
+    );
+
+    PlayerTextDrawSetString(
+        playerid,
+        HUDVida[playerid],
+        texto
+    );
+
+    return 1;
+}
+
+public AtualizarHUDGeral()
+{
+    for (new playerid = 0; playerid < MAX_PLAYERS; playerid++)
+    {
+        if (IsPlayerConnected(playerid))
+        {
+            AtualizarHUD(playerid);
+        }
+    }
+
+    return 1;
+}
+
+// PAINEL DO PROPRIETARIO
+
 stock MostrarPainelDono(playerid)
 {
     ShowPlayerDialog(
@@ -125,10 +196,12 @@ stock MostrarPainelDono(playerid)
         "Selecionar",
         "Fechar"
     );
+
     return 1;
 }
 
 // ATUALIZAR PLACA DA CASA
+
 stock AtualizarTextoCasa(casaid)
 {
     new texto[160];
@@ -142,26 +215,23 @@ stock AtualizarTextoCasa(casaid)
             PrecoCasa[casaid]
         );
     }
+    else if (CasaTrancada[casaid])
+    {
+        format(
+            texto,
+            sizeof(texto),
+            "{FFD700}CASA PARTICULAR\n{FFFFFF}Dono: %s\n{FF3333}PORTA TRANCADA",
+            CasaDono[casaid]
+        );
+    }
     else
     {
-        if (CasaTrancada[casaid])
-        {
-            format(
-                texto,
-                sizeof(texto),
-                "{FFD700}CASA PARTICULAR\n{FFFFFF}Dono: %s\n{FF3333}PORTA TRANCADA",
-                CasaDono[casaid]
-            );
-        }
-        else
-        {
-            format(
-                texto,
-                sizeof(texto),
-                "{FFD700}CASA PARTICULAR\n{FFFFFF}Dono: %s\n{00FF00}PORTA DESTRANCADA",
-                CasaDono[casaid]
-            );
-        }
+        format(
+            texto,
+            sizeof(texto),
+            "{FFD700}CASA PARTICULAR\n{FFFFFF}Dono: %s\n{00FF00}PORTA DESTRANCADA",
+            CasaDono[casaid]
+        );
     }
 
     Update3DTextLabelText(
@@ -174,6 +244,7 @@ stock AtualizarTextoCasa(casaid)
 }
 
 // ENCONTRAR CASA PROXIMA
+
 stock EncontrarCasaProxima(playerid)
 {
     for (new i = 0; i < MAX_CASAS; i++)
@@ -194,6 +265,7 @@ stock EncontrarCasaProxima(playerid)
 }
 
 // ENTRAR NA CASA
+
 stock EntrarCasa(playerid, casaid)
 {
     if (!CasaComprada[casaid])
@@ -210,9 +282,7 @@ stock EntrarCasa(playerid, casaid)
     }
 
     if (IsPlayerInAnyVehicle(playerid))
-    {
         RemovePlayerFromVehicle(playerid);
-    }
 
     CasaAtual[playerid] = casaid;
     JogadorDentroCasa[playerid] = true;
@@ -220,13 +290,7 @@ stock EntrarCasa(playerid, casaid)
     SetPlayerInterior(playerid, 1);
     SetPlayerVirtualWorld(playerid, casaid + 1);
 
-    SetPlayerPos(
-        playerid,
-        223.0,
-        1287.0,
-        1082.1
-    );
-
+    SetPlayerPos(playerid, 223.0, 1287.0, 1082.1);
     SetPlayerFacingAngle(playerid, 0.0);
 
     SendClientMessage(
@@ -245,12 +309,11 @@ stock EntrarCasa(playerid, casaid)
 }
 
 // SAIR DA CASA
+
 stock SairCasa(playerid)
 {
     if (!JogadorDentroCasa[playerid] || CasaAtual[playerid] == -1)
-    {
         return 1;
-    }
 
     new casaid = CasaAtual[playerid];
 
@@ -276,7 +339,8 @@ stock SairCasa(playerid)
     return 1;
 }
 
-// MOSTRAR MENU DA CASA
+// MENU DA CASA
+
 stock MostrarMenuCasa(playerid, casaid)
 {
     new titulo[80];
@@ -301,29 +365,13 @@ stock MostrarMenuCasa(playerid, casaid)
     else if (EhDonoDaCasa(playerid, casaid))
     {
         if (CasaTrancada[casaid])
-        {
-            format(
-                texto,
-                sizeof(texto),
-                "Entrar na casa\nDestrancar porta"
-            );
-        }
+            format(texto, sizeof(texto), "Entrar na casa\nDestrancar porta");
         else
-        {
-            format(
-                texto,
-                sizeof(texto),
-                "Entrar na casa\nTrancar porta"
-            );
-        }
+            format(texto, sizeof(texto), "Entrar na casa\nTrancar porta");
     }
     else
     {
-        format(
-            texto,
-            sizeof(texto),
-            "Entrar na casa"
-        );
+        format(texto, sizeof(texto), "Entrar na casa");
     }
 
     ShowPlayerDialog(
@@ -338,6 +386,8 @@ stock MostrarMenuCasa(playerid, casaid)
 
     return 1;
 }
+
+// INICIALIZACAO DO SERVIDOR
 
 public OnGameModeInit()
 {
@@ -354,12 +404,12 @@ public OnGameModeInit()
     SetWorldTime(12);
     SetWeather(1);
 
-    
-    // LOGO MINIMALISTA ZK RP
+    // LOGO MINIMALISTA
+
     LogoZK = TextDrawCreate(304.0, 12.0, "ZK");
     TextDrawAlignment(LogoZK, 2);
     TextDrawLetterSize(LogoZK, 0.38, 1.45);
-    TextDrawColor(LogoZK, 0xFFFFFFFF);
+    TextDrawColor(LogoZK, COR_BRANCO);
     TextDrawSetOutline(LogoZK, 0);
     TextDrawSetShadow(LogoZK, 0);
     TextDrawFont(LogoZK, 2);
@@ -369,34 +419,27 @@ public OnGameModeInit()
     LogoRP = TextDrawCreate(336.0, 12.0, "RP");
     TextDrawAlignment(LogoRP, 2);
     TextDrawLetterSize(LogoRP, 0.38, 1.45);
-    TextDrawColor(LogoRP, 0x9B5CFFFF);
+    TextDrawColor(LogoRP, COR_ROXO);
     TextDrawSetOutline(LogoRP, 0);
     TextDrawSetShadow(LogoRP, 0);
     TextDrawFont(LogoRP, 2);
     TextDrawSetProportional(LogoRP, 1);
     TextDrawSetSelectable(LogoRP, 0);
 
-        // HUD MODERNO ZK RP
+    // NOME DO SERVIDOR NO HUD
 
     HUDNome = TextDrawCreate(320.0, 38.0, "ZK ROLEPLAY");
     TextDrawAlignment(HUDNome, 2);
     TextDrawLetterSize(HUDNome, 0.20, 0.85);
-    TextDrawColor(HUDNome, 0xFFFFFFFF);
+    TextDrawColor(HUDNome, COR_BRANCO);
     TextDrawSetOutline(HUDNome, 0);
     TextDrawSetShadow(HUDNome, 0);
     TextDrawFont(HUDNome, 2);
+    TextDrawSetProportional(HUDNome, 1);
 
-    HUDDinheiro = TextDrawCreate(15.0, 390.0, "DINHEIRO: $0");
-    TextDrawLetterSize(HUDDinheiro, 0.20, 0.85);
-    TextDrawColor(HUDDinheiro, 0x9B5CFFFF);
-    TextDrawSetOutline(HUDDinheiro, 1);
-    TextDrawFont(HUDDinheiro, 2);
+    // ATUALIZACAO AUTOMATICA DO HUD A CADA SEGUNDO
 
-    HUDVida = TextDrawCreate(15.0, 410.0, "VIDA: 100");
-    TextDrawLetterSize(HUDVida, 0.20, 0.85);
-    TextDrawColor(HUDVida, 0xFFFFFFFF);
-    TextDrawSetOutline(HUDVida, 1);
-    TextDrawFont(HUDVida, 2);
+    SetTimer("AtualizarHUDGeral", 1000, true);
 
     FuncionarioEmpregos = CreateActor(
         17,
@@ -418,6 +461,7 @@ public OnGameModeInit()
     );
 
     // CRIAR AS TRES CASAS
+
     for (new i = 0; i < MAX_CASAS; i++)
     {
         CasaComprada[i] = false;
@@ -437,1129 +481,6 @@ public OnGameModeInit()
 
         AtualizarTextoCasa(i);
     }
-
-    return 1;
-}
-
-public OnPlayerConnect(playerid)
-{
-    TrabalhandoEntrega[playerid] = false;
-    AdminAutenticado[playerid] = false;
-    TemMarcacao[playerid] = false;
-
-    EntregaVeiculo[playerid] = INVALID_VEHICLE_ID;
-    EntregaEtapa[playerid] = 0;
-    VeiculoConcessionaria[playerid] = INVALID_VEHICLE_ID;
-    VeiculoDono[playerid] = INVALID_VEHICLE_ID;
-
-    CasaAtual[playerid] = -1;
-    JogadorDentroCasa[playerid] = false;
-
-    TagDono[playerid] = Text3D:INVALID_3DTEXT_ID;
-
-    SetPlayerMapIcon(
-        playerid,
-        10,
-        ROUPAS_X,
-        ROUPAS_Y,
-        ROUPAS_Z,
-        45,
-        0,
-        MAPICON_GLOBAL
-    );
-
-    SetPlayerMapIcon(
-        playerid,
-        11,
-        CONCESSIONARIA_X,
-        CONCESSIONARIA_Y,
-        CONCESSIONARIA_Z,
-        55,
-        0,
-        MAPICON_GLOBAL
-    );
-
-    // ICONES DAS CASAS
-    for (new i = 0; i < MAX_CASAS; i++)
-    {
-        SetPlayerMapIcon(
-            playerid,
-            20 + i,
-            CasaX[i],
-            CasaY[i],
-            CasaZ[i],
-            31,
-            0,
-            MAPICON_GLOBAL
-        );
-    }
-
-    if (EhDono(playerid))
-    {
-        TagDono[playerid] = Create3DTextLabel(
-            "{FFD700}[DONO]\n{FFFFFF}Fhzk",
-            COR_DOURADO,
-            0.0,
-            0.0,
-            0.0,
-            30.0,
-            0,
-            1
-        );
-
-        Attach3DTextLabelToPlayer(
-            TagDono[playerid],
-            playerid,
-            0.0,
-            0.0,
-            0.45
-        );
-
-        SendClientMessage(
-            playerid,
-            COR_DOURADO,
-            "Voce e o proprietario da ZK RP!"
-        );
-
-        SendClientMessage(
-            playerid,
-            COR_BRANCO,
-            "Use /dono para acessar seu painel."
-        );
-    }
-
-    SendClientMessage(
-        playerid,
-        COR_CIANO,
-        "Bem-vindo a ZK RP!"
-    );
-
-    return 1;
-}
-
-public OnPlayerSpawn(playerid)
-{
-    TextDrawShowForPlayer(playerid, LogoZK);
-TextDrawShowForPlayer(playerid, LogoRP);
-new Text:HUDDinheiro;
-new Text:HUDVida;
-new Text:HUDNome;
-    TextDrawShowForPlayer(playerid, HUDNome);
-    TextDrawShowForPlayer(playerid, HUDDinheiro);
-    TextDrawShowForPlayer(playerid, HUDVida);
-
-    if (EhDono(playerid))
-    {
-        SetPlayerColor(playerid, COR_DOURADO);
-    }
-
-    SendClientMessage(
-        playerid,
-        COR_CIANO,
-        "Divirta-se na cidade ZK RP!"
-    );
-
-    return 1;
-}
-
-// MARCACAO NO MAPA PARA O DONO
-public OnPlayerClickMap(playerid, Float:fX, Float:fY, Float:fZ)
-{
-    if (!EhDono(playerid) || !AdminAutenticado[playerid])
-        return 1;
-
-    MarcacaoX[playerid] = fX;
-    MarcacaoY[playerid] = fY;
-    MarcacaoZ[playerid] = fZ;
-
-    TemMarcacao[playerid] = true;
-
-    SendClientMessage(
-        playerid,
-        COR_DOURADO,
-        "Marcacao salva! Use /dono e escolha teletransportar para marcacao do mapa."
-    );
-
-    return 1;
-}
-
-// GPS DAS ENTREGAS
-stock AtualizarRotaEntrega(playerid)
-{
-    if (EntregaEtapa[playerid] == 0)
-    {
-        SetPlayerRaceCheckpoint(
-            playerid,
-            0,
-            1833.0, -1842.0, 13.5,
-            2495.0, -1687.0, 13.5,
-            5.0
-        );
-    }
-    else if (EntregaEtapa[playerid] == 1)
-    {
-        SetPlayerRaceCheckpoint(
-            playerid,
-            0,
-            2495.0, -1687.0, 13.5,
-            1368.0, -1279.0, 13.5,
-            5.0
-        );
-    }
-    else
-    {
-        SetPlayerRaceCheckpoint(
-            playerid,
-            0,
-            1368.0, -1279.0, 13.5,
-            1833.0, -1842.0, 13.5,
-            5.0
-        );
-    }
-
-    return 1;
-}
-
-stock IniciarEntrega(playerid)
-{
-    new Float:x, Float:y, Float:z, Float:angulo;
-
-    if (TrabalhandoEntrega[playerid])
-    {
-        SendClientMessage(
-            playerid,
-            COR_VERMELHO,
-            "Voce ja esta trabalhando."
-        );
-        return 1;
-    }
-
-    GetPlayerPos(playerid, x, y, z);
-    GetPlayerFacingAngle(playerid, angulo);
-
-    EntregaVeiculo[playerid] = CreateVehicle(
-        448,
-        x + (2.5 * floatsin(-angulo, degrees)),
-        y + (2.5 * floatcos(-angulo, degrees)),
-        z,
-        angulo,
-        -1,
-        -1,
-        -1
-    );
-
-    if (EntregaVeiculo[playerid] == INVALID_VEHICLE_ID)
-    {
-        SendClientMessage(
-            playerid,
-            COR_VERMELHO,
-            "Nao foi possivel criar a moto."
-        );
-        return 1;
-    }
-
-    SkinOriginal[playerid] = GetPlayerSkin(playerid);
-    SetPlayerSkin(playerid, 155);
-
-    TrabalhandoEntrega[playerid] = true;
-    EntregaEtapa[playerid] = 0;
-
-    PutPlayerInVehicle(
-        playerid,
-        EntregaVeiculo[playerid],
-        0
-    );
-
-    AtualizarRotaEntrega(playerid);
-
-    SendClientMessage(
-        playerid,
-        COR_VERDE,
-        "Emprego iniciado! Cada entrega paga $250."
-    );
-
-    return 1;
-}
-
-stock PararEntrega(playerid)
-{
-    if (!TrabalhandoEntrega[playerid])
-    {
-        SendClientMessage(
-            playerid,
-            COR_VERMELHO,
-            "Voce nao esta trabalhando."
-        );
-        return 1;
-    }
-
-    DisablePlayerRaceCheckpoint(playerid);
-
-    if (GetPlayerVehicleID(playerid) == EntregaVeiculo[playerid])
-    {
-        RemovePlayerFromVehicle(playerid);
-    }
-
-    if (EntregaVeiculo[playerid] != INVALID_VEHICLE_ID)
-    {
-        DestroyVehicle(EntregaVeiculo[playerid]);
-    }
-
-    SetPlayerSkin(playerid, SkinOriginal[playerid]);
-
-    EntregaVeiculo[playerid] = INVALID_VEHICLE_ID;
-    TrabalhandoEntrega[playerid] = false;
-    EntregaEtapa[playerid] = 0;
-
-    SendClientMessage(
-        playerid,
-        COR_CIANO,
-        "Expediente encerrado!"
-    );
-
-    return 1;
-}
-
-public OnPlayerEnterRaceCheckpoint(playerid)
-{
-    if (!TrabalhandoEntrega[playerid])
-        return 1;
-
-    if (GetPlayerVehicleID(playerid) != EntregaVeiculo[playerid])
-        return 1;
-
-    GivePlayerMoney(playerid, PAGAMENTO_ENTREGA);
-
-    SendClientMessage(
-        playerid,
-        COR_VERDE,
-        "Entrega concluida! Voce recebeu $250."
-    );
-
-    EntregaEtapa[playerid]++;
-
-    if (EntregaEtapa[playerid] >= 3)
-    {
-        EntregaEtapa[playerid] = 0;
-    }
-
-    AtualizarRotaEntrega(playerid);
-
-    return 1;
-}
-
-// DIALOGOS
-public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
-{
-    if (dialogid == DIALOG_EMPREGO)
-    {
-        if (response && listitem == 0)
-        {
-            IniciarEntrega(playerid);
-        }
-
-        return 1;
-    }
-
-    if (dialogid == DIALOG_ROUPAS)
-    {
-        new skins[5] = {7, 14, 21, 23, 29};
-
-        if (!response)
-            return 1;
-
-        if (listitem < 0 || listitem > 4)
-            return 1;
-
-        if (GetPlayerMoney(playerid) < PRECO_ROUPA)
-        {
-            SendClientMessage(
-                playerid,
-                COR_VERMELHO,
-                "Dinheiro insuficiente."
-            );
-            return 1;
-        }
-
-        GivePlayerMoney(playerid, -PRECO_ROUPA);
-        SetPlayerSkin(playerid, skins[listitem]);
-
-        SendClientMessage(
-            playerid,
-            COR_VERDE,
-            "Roupa comprada por $500!"
-        );
-
-        return 1;
-    }
-
-    if (dialogid == DIALOG_CONCESSIONARIA)
-    {
-        new modelos[5] = {462, 468, 560, 541, 400};
-        new precos[5] = {1500, 2500, 8000, 12000, 10000};
-
-        if (!response)
-            return 1;
-
-        if (listitem < 0 || listitem > 4)
-            return 1;
-
-        if (GetPlayerMoney(playerid) < precos[listitem])
-        {
-            SendClientMessage(
-                playerid,
-                COR_VERMELHO,
-                "Dinheiro insuficiente."
-            );
-            return 1;
-        }
-
-        GivePlayerMoney(playerid, -precos[listitem]);
-
-        if (VeiculoConcessionaria[playerid] != INVALID_VEHICLE_ID)
-        {
-            DestroyVehicle(VeiculoConcessionaria[playerid]);
-            VeiculoConcessionaria[playerid] = INVALID_VEHICLE_ID;
-        }
-
-        VeiculoConcessionaria[playerid] = CreateVehicle(
-            modelos[listitem],
-            CONCESSIONARIA_X + 5.0,
-            CONCESSIONARIA_Y,
-            CONCESSIONARIA_Z,
-            90.0,
-            -1,
-            -1,
-            -1
-        );
-
-        if (VeiculoConcessionaria[playerid] == INVALID_VEHICLE_ID)
-        {
-            GivePlayerMoney(playerid, precos[listitem]);
-
-            SendClientMessage(
-                playerid,
-                COR_VERMELHO,
-                "Erro ao criar veiculo. Dinheiro devolvido."
-            );
-            return 1;
-        }
-
-        PutPlayerInVehicle(
-            playerid,
-            VeiculoConcessionaria[playerid],
-            0
-        );
-
-        SendClientMessage(
-            playerid,
-            COR_VERDE,
-            "Veiculo comprado com sucesso!"
-        );
-
-        return 1;
-    }
-
-    // SISTEMA DE CASAS
-    if (dialogid == DIALOG_CASA)
-    {
-        if (!response)
-            return 1;
-
-        new casaid = EncontrarCasaProxima(playerid);
-
-        if (casaid == -1)
-        {
-            SendClientMessage(
-                playerid,
-                COR_VERMELHO,
-                "Voce nao esta perto de uma casa."
-            );
-            return 1;
-        }
-
-        if (listitem == 0)
-        {
-            if (!CasaComprada[casaid])
-            {
-                if (GetPlayerMoney(playerid) < PrecoCasa[casaid])
-                {
-                    SendClientMessage(
-                        playerid,
-                        COR_VERMELHO,
-                        "Voce nao tem dinheiro suficiente para comprar esta casa."
-                    );
-                    return 1;
-                }
-
-                new nome[MAX_PLAYER_NAME];
-                GetPlayerName(playerid, nome, sizeof(nome));
-
-                GivePlayerMoney(playerid, -PrecoCasa[casaid]);
-
-                CasaComprada[casaid] = true;
-                CasaTrancada[casaid] = false;
-
-                format(
-                    CasaDono[casaid],
-                    MAX_PLAYER_NAME,
-                    "%s",
-                    nome
-                );
-
-                AtualizarTextoCasa(casaid);
-
-                SendClientMessage(
-                    playerid,
-                    COR_VERDE,
-                    "Parabens! Voce comprou sua casa."
-                );
-
-                SendClientMessage(
-                    playerid,
-                    COR_CIANO,
-                    "Use /casa perto da porta para entrar ou sair."
-                );
-
-                return 1;
-            }
-
-            EntrarCasa(playerid, casaid);
-            return 1;
-        }
-
-        if (listitem == 1)
-        {
-            if (!CasaComprada[casaid])
-                return 1;
-
-            if (!EhDonoDaCasa(playerid, casaid))
-            {
-                SendClientMessage(
-                    playerid,
-                    COR_VERMELHO,
-                    "Somente o proprietario pode trancar esta casa."
-                );
-                return 1;
-            }
-
-            CasaTrancada[casaid] = !CasaTrancada[casaid];
-
-            AtualizarTextoCasa(casaid);
-
-            if (CasaTrancada[casaid])
-            {
-                SendClientMessage(
-                    playerid,
-                    COR_DOURADO,
-                    "Casa trancada com sucesso!"
-                );
-            }
-            else
-            {
-                SendClientMessage(
-                    playerid,
-                    COR_VERDE,
-                    "Casa destrancada com sucesso!"
-                );
-            }
-
-            return 1;
-        }
-
-        return 1;
-    }
-
-    // LOGIN DO PROPRIETARIO
-    if (dialogid == DIALOG_DONO_LOGIN)
-    {
-        if (!response)
-            return 1;
-
-        if (!EhDono(playerid))
-            return 1;
-
-        if (strcmp(inputtext, SENHA_DONO, false) != 0)
-        {
-            SendClientMessage(
-                playerid,
-                COR_VERMELHO,
-                "Senha incorreta!"
-            );
-
-            AdminAutenticado[playerid] = false;
-            return 1;
-        }
-
-        AdminAutenticado[playerid] = true;
-
-        SendClientMessage(
-            playerid,
-            COR_DOURADO,
-            "Acesso de proprietario autorizado!"
-        );
-
-        MostrarPainelDono(playerid);
-
-        return 1;
-    }
-
-    // PAINEL DO PROPRIETARIO
-    if (dialogid == DIALOG_DONO_PAINEL)
-    {
-        if (!response)
-            return 1;
-
-        if (!EhDono(playerid) || !AdminAutenticado[playerid])
-            return 1;
-
-        if (listitem == 0)
-        {
-            SetPlayerSkin(playerid, SKIN_DONO);
-
-            SendClientMessage(
-                playerid,
-                COR_DOURADO,
-                "Skin do proprietario equipada."
-            );
-        }
-        else if (listitem == 1)
-        {
-            ShowPlayerDialog(
-                playerid,
-                DIALOG_DONO_VEICULOS,
-                DIALOG_STYLE_LIST,
-                "VEICULOS DO DONO",
-                "Infernus\nNRG-500\nSultan\nTurismo\nMaverick (helicoptero)",
-                "Pegar",
-                "Voltar"
-            );
-        }
-        else if (listitem == 2)
-        {
-            ShowPlayerDialog(
-                playerid,
-                DIALOG_DONO_TELEPORTES,
-                DIALOG_STYLE_LIST,
-                "TELETRANSPORTE",
-                "Centro de Los Santos\nAeroporto\nPraia de Santa Maria\nSan Fierro\nLas Venturas",
-                "Ir",
-                "Voltar"
-            );
-        }
-        else if (listitem == 3)
-        {
-            if (GetPlayerSpecialAction(playerid) == SPECIAL_ACTION_USEJETPACK)
-            {
-                SetPlayerSpecialAction(
-                    playerid,
-                    SPECIAL_ACTION_NONE
-                );
-
-                SendClientMessage(
-                    playerid,
-                    COR_CIANO,
-                    "Jetpack desativado."
-                );
-            }
-            else
-            {
-                SetPlayerSpecialAction(
-                    playerid,
-                    SPECIAL_ACTION_USEJETPACK
-                );
-
-                SendClientMessage(
-                    playerid,
-                    COR_DOURADO,
-                    "Jetpack ativado."
-                );
-            }
-        }
-        else if (listitem == 4)
-        {
-            GivePlayerMoney(playerid, 100000);
-
-            SendClientMessage(
-                playerid,
-                COR_VERDE,
-                "Voce recebeu $100.000."
-            );
-        }
-        else if (listitem == 5)
-        {
-            SetPlayerHealth(playerid, 100.0);
-            SetPlayerArmour(playerid, 100.0);
-
-            SendClientMessage(
-                playerid,
-                COR_VERDE,
-                "Vida e colete restaurados."
-            );
-        }
-        else if (listitem == 6)
-        {
-            SpawnPlayer(playerid);
-        }
-        else if (listitem == 7)
-        {
-            if (!TemMarcacao[playerid])
-            {
-                SendClientMessage(
-                    playerid,
-                    COR_VERMELHO,
-                    "Voce ainda nao marcou nenhum local no mapa."
-                );
-                return 1;
-            }
-
-            if (IsPlayerInAnyVehicle(playerid))
-            {
-                RemovePlayerFromVehicle(playerid);
-            }
-
-            SetPlayerInterior(playerid, 0);
-            SetPlayerVirtualWorld(playerid, 0);
-
-            SetPlayerPosFindZ(
-                playerid,
-                MarcacaoX[playerid],
-                MarcacaoY[playerid],
-                MarcacaoZ[playerid]
-            );
-
-            SendClientMessage(
-                playerid,
-                COR_DOURADO,
-                "Voce foi teleportado para a marcacao do mapa!"
-            );
-        }
-
-        return 1;
-    }
-
-    // VEICULOS DO PROPRIETARIO
-    if (dialogid == DIALOG_DONO_VEICULOS)
-    {
-        if (!EhDono(playerid) || !AdminAutenticado[playerid])
-            return 1;
-
-        if (!response)
-        {
-            MostrarPainelDono(playerid);
-            return 1;
-        }
-
-        new modelos[5] = {411, 522, 560, 451, 487};
-
-        if (listitem < 0 || listitem > 4)
-            return 1;
-
-        new Float:x, Float:y, Float:z, Float:a;
-
-        GetPlayerPos(playerid, x, y, z);
-        GetPlayerFacingAngle(playerid, a);
-
-        if (VeiculoDono[playerid] != INVALID_VEHICLE_ID)
-        {
-            DestroyVehicle(VeiculoDono[playerid]);
-            VeiculoDono[playerid] = INVALID_VEHICLE_ID;
-        }
-
-        VeiculoDono[playerid] = CreateVehicle(
-            modelos[listitem],
-            x + 3.0,
-            y,
-            z,
-            a,
-            0,
-            0,
-            -1
-        );
-
-        if (VeiculoDono[playerid] != INVALID_VEHICLE_ID)
-        {
-            PutPlayerInVehicle(
-                playerid,
-                VeiculoDono[playerid],
-                0
-            );
-
-            SendClientMessage(
-                playerid,
-                COR_DOURADO,
-                "Veiculo do proprietario criado."
-            );
-        }
-        else
-        {
-            SendClientMessage(
-                playerid,
-                COR_VERMELHO,
-                "Nao foi possivel criar o veiculo."
-            );
-        }
-
-        return 1;
-    }
-
-    // TELETRANSPORTE DO PROPRIETARIO
-    if (dialogid == DIALOG_DONO_TELEPORTES)
-    {
-        if (!EhDono(playerid) || !AdminAutenticado[playerid])
-            return 1;
-
-        if (!response)
-        {
-            MostrarPainelDono(playerid);
-            return 1;
-        }
-
-        if (listitem < 0 || listitem > 4)
-            return 1;
-
-        if (IsPlayerInAnyVehicle(playerid))
-        {
-            RemovePlayerFromVehicle(playerid);
-        }
-
-        SetPlayerInterior(playerid, 0);
-        SetPlayerVirtualWorld(playerid, 0);
-
-        switch (listitem)
-        {
-            case 0: SetPlayerPos(playerid, 1481.0, -1771.0, 18.8);
-            case 1: SetPlayerPos(playerid, 1958.0, -2185.0, 13.5);
-            case 2: SetPlayerPos(playerid, 342.0, -1808.0, 5.0);
-            case 3: SetPlayerPos(playerid, -1985.0, 137.0, 27.7);
-            case 4: SetPlayerPos(playerid, 1690.0, 1447.0, 10.7);
-        }
-
-        SendClientMessage(
-            playerid,
-            COR_DOURADO,
-            "Teletransporte realizado."
-        );
-
-        return 1;
-    }
-
-    return 0;
-}
-
-public OnPlayerCommandText(playerid, cmdtext[])
-{
-    if (strcmp(cmdtext, "/dono", true) == 0)
-    {
-        if (!EhDono(playerid))
-        {
-            SendClientMessage(
-                playerid,
-                COR_VERMELHO,
-                "Voce nao tem permissao."
-            );
-            return 1;
-        }
-
-        if (AdminAutenticado[playerid])
-        {
-            MostrarPainelDono(playerid);
-            return 1;
-        }
-
-        ShowPlayerDialog(
-            playerid,
-            DIALOG_DONO_LOGIN,
-            DIALOG_STYLE_PASSWORD,
-            "ACESSO DO PROPRIETARIO",
-            "Digite sua senha particular:",
-            "Entrar",
-            "Cancelar"
-        );
-
-        return 1;
-    }
-
-    // COMANDO DAS CASAS
-    if (strcmp(cmdtext, "/casa", true) == 0)
-    {
-        if (JogadorDentroCasa[playerid])
-        {
-            SairCasa(playerid);
-            return 1;
-        }
-
-        new casaid = EncontrarCasaProxima(playerid);
-
-        if (casaid == -1)
-        {
-            SendClientMessage(
-                playerid,
-                COR_VERMELHO,
-                "Voce precisa estar perto de uma casa."
-            );
-            return 1;
-        }
-
-        MostrarMenuCasa(playerid, casaid);
-        return 1;
-    }
-
-    // VENDER CASA
-    if (strcmp(cmdtext, "/vendercasa", true) == 0)
-    {
-        new casaid = -1;
-
-        if (JogadorDentroCasa[playerid])
-        {
-            casaid = CasaAtual[playerid];
-        }
-        else
-        {
-            casaid = EncontrarCasaProxima(playerid);
-        }
-
-        if (casaid == -1)
-        {
-            SendClientMessage(
-                playerid,
-                COR_VERMELHO,
-                "Va ate a sua casa para vende-la."
-            );
-            return 1;
-        }
-
-        if (!CasaComprada[casaid] || !EhDonoDaCasa(playerid, casaid))
-        {
-            SendClientMessage(
-                playerid,
-                COR_VERMELHO,
-                "Esta casa nao pertence a voce."
-            );
-            return 1;
-        }
-
-        new reembolso = PrecoCasa[casaid] / 2;
-
-        GivePlayerMoney(playerid, reembolso);
-
-        CasaComprada[casaid] = false;
-        CasaTrancada[casaid] = false;
-        CasaDono[casaid][0] = '\0';
-
-        AtualizarTextoCasa(casaid);
-
-        if (JogadorDentroCasa[playerid])
-        {
-            SairCasa(playerid);
-        }
-
-        SendClientMessage(
-            playerid,
-            COR_VERDE,
-            "Casa vendida! Voce recebeu metade do valor pago."
-        );
-
-        return 1;
-    }
-
-    if (strcmp(cmdtext, "/pos", true) == 0)
-    {
-        new Float:x, Float:y, Float:z, Float:angulo;
-        new mensagem[144];
-
-        GetPlayerPos(playerid, x, y, z);
-        GetPlayerFacingAngle(playerid, angulo);
-
-        format(
-            mensagem,
-            sizeof(mensagem),
-            "POSICAO: X: %.2f | Y: %.2f | Z: %.2f | ANG: %.2f",
-            x, y, z, angulo
-        );
-
-        SendClientMessage(playerid, COR_CIANO, mensagem);
-        return 1;
-    }
-
-    if (strcmp(cmdtext, "/ajuda", true) == 0)
-    {
-        SendClientMessage(
-            playerid,
-            COR_CIANO,
-            "COMANDOS: /empregos /parar /roupas /concessionaria /pos /dono /vida /colete /spawn /casa /vendercasa"
-        );
-        return 1;
-    }
-
-    if (strcmp(cmdtext, "/empregos", true) == 0)
-    {
-        if (!IsPlayerInRangeOfPoint(
-            playerid,
-            4.0,
-            AGENCIA_X,
-            AGENCIA_Y,
-            AGENCIA_Z
-        ))
-        {
-            SendClientMessage(
-                playerid,
-                COR_VERMELHO,
-                "Va ate a agencia de empregos."
-            );
-            return 1;
-        }
-
-        ShowPlayerDialog(
-            playerid,
-            DIALOG_EMPREGO,
-            DIALOG_STYLE_LIST,
-            "AGENCIA DE EMPREGOS - ZK RP",
-            "Entregador de delivery",
-            "Trabalhar",
-            "Fechar"
-        );
-
-        return 1;
-    }
-
-    if (strcmp(cmdtext, "/roupas", true) == 0)
-    {
-        if (!IsPlayerInRangeOfPoint(
-            playerid,
-            8.0,
-            ROUPAS_X,
-            ROUPAS_Y,
-            ROUPAS_Z
-        ))
-        {
-            SendClientMessage(
-                playerid,
-                COR_VERMELHO,
-                "Va ate a loja de roupas."
-            );
-            return 1;
-        }
-
-        ShowPlayerDialog(
-            playerid,
-            DIALOG_ROUPAS,
-            DIALOG_STYLE_LIST,
-            "LOJA DE ROUPAS - ZK RP",
-            "Roupa 1 - $500\nRoupa 2 - $500\nRoupa 3 - $500\nRoupa 4 - $500\nRoupa 5 - $500",
-            "Comprar",
-            "Fechar"
-        );
-
-        return 1;
-    }
-
-    if (strcmp(cmdtext, "/concessionaria", true) == 0)
-    {
-        if (!IsPlayerInRangeOfPoint(
-            playerid,
-            12.0,
-            CONCESSIONARIA_X,
-            CONCESSIONARIA_Y,
-            CONCESSIONARIA_Z
-        ))
-        {
-            SendClientMessage(
-                playerid,
-                COR_VERMELHO,
-                "Va ate a concessionaria."
-            );
-            return 1;
-        }
-
-        ShowPlayerDialog(
-            playerid,
-            DIALOG_CONCESSIONARIA,
-            DIALOG_STYLE_LIST,
-            "CONCESSIONARIA - ZK RP",
-            "Faggio - $1.500\nSanchez - $2.500\nSultan - $8.000\nBullet - $12.000\nLandstalker - $10.000",
-            "Comprar",
-            "Fechar"
-        );
-
-        return 1;
-    }
-
-    if (strcmp(cmdtext, "/parar", true) == 0)
-    {
-        return PararEntrega(playerid);
-    }
-
-    if (strcmp(cmdtext, "/vida", true) == 0)
-    {
-        SetPlayerHealth(playerid, 100.0);
-
-        SendClientMessage(
-            playerid,
-            COR_VERDE,
-            "Vida restaurada!"
-        );
-
-        return 1;
-    }
-
-    if (strcmp(cmdtext, "/colete", true) == 0)
-    {
-        SetPlayerArmour(playerid, 100.0);
-
-        SendClientMessage(
-            playerid,
-            COR_VERDE,
-            "Colete restaurado!"
-        );
-
-        return 1;
-    }
-
-    if (strcmp(cmdtext, "/spawn", true) == 0)
-    {
-        SpawnPlayer(playerid);
-        return 1;
-    }
-
-    return 0;
-}
-
-public OnPlayerDisconnect(playerid, reason)
-{
-    DisablePlayerRaceCheckpoint(playerid);
-
-    if (EntregaVeiculo[playerid] != INVALID_VEHICLE_ID)
-    {
-        DestroyVehicle(EntregaVeiculo[playerid]);
-    }
-
-    if (VeiculoConcessionaria[playerid] != INVALID_VEHICLE_ID)
-    {
-        DestroyVehicle(VeiculoConcessionaria[playerid]);
-    }
-
-    if (VeiculoDono[playerid] != INVALID_VEHICLE_ID)
-    {
-        DestroyVehicle(VeiculoDono[playerid]);
-    }
-
-    if (TagDono[playerid] != Text3D:INVALID_3DTEXT_ID)
-    {
-        Delete3DTextLabel(TagDono[playerid]);
-    }
-
-    TrabalhandoEntrega[playerid] = false;
-    AdminAutenticado[playerid] = false;
-    TemMarcacao[playerid] = false;
-
-    EntregaVeiculo[playerid] = INVALID_VEHICLE_ID;
-    VeiculoConcessionaria[playerid] = INVALID_VEHICLE_ID;
-    VeiculoDono[playerid] = INVALID_VEHICLE_ID;
-    EntregaEtapa[playerid] = 0;
-
-    CasaAtual[playerid] = -1;
-    JogadorDentroCasa[playerid] = false;
 
     return 1;
 }
