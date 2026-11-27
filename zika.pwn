@@ -557,3 +557,150 @@ stock MenuDono(playerid)
         "Executar", "Fechar");
     return 1;
 }
+
+// ============================================================
+// BLOCO 3/4 - INICIALIZACAO E CALLBACKS DO SERVIDOR
+// ============================================================
+
+public OnGameModeInit()
+{
+    SetGameModeText(ZK_SERVIDOR);
+    ShowNameTags(true);
+    ShowPlayerMarkers(PLAYER_MARKERS_MODE_GLOBAL);
+    UsePlayerPedAnims();
+    SetWorldTime(12);
+    SetWeather(10);
+
+    AddPlayerClass(7, 2495.0, -1685.0, 13.5, 90.0, 0, 0, 0, 0, 0, 0);
+
+    InicializarCasas();
+
+    SetTimer("SalvarTodos", 300000, true);
+    SetTimer("AtualizarNecessidades", 60000, true);
+
+    print("====================================");
+    print(" ZK RP MOBILE iniciado!");
+    print(" Sistema de contas carregado.");
+    print("====================================");
+    return 1;
+}
+
+public OnGameModeExit()
+{
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (Logado(i))
+        {
+            SalvarConta(i);
+        }
+    }
+    return 1;
+}
+
+public OnPlayerConnect(playerid)
+{
+    InicializarDados(playerid);
+
+    GetPlayerName(playerid, Nome[playerid], MAX_PLAYER_NAME);
+
+    TogglePlayerSpectating(playerid, true);
+    MostrarLogin(playerid);
+    return 1;
+}
+
+public OnPlayerDisconnect(playerid, reason)
+{
+    #pragma unused reason
+
+    if (Logado(playerid))
+    {
+        SalvarConta(playerid);
+    }
+
+    if (VeiculoTrabalho[playerid] != INVALID_VEHICLE_ID)
+    {
+        DestroyVehicle(VeiculoTrabalho[playerid]);
+        VeiculoTrabalho[playerid] = INVALID_VEHICLE_ID;
+    }
+
+    InicializarDados(playerid);
+    return 1;
+}
+
+public OnPlayerRequestClass(playerid, classid)
+{
+    #pragma unused classid
+
+    if (!Logado(playerid))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+public OnPlayerSpawn(playerid)
+{
+    if (!Logado(playerid))
+    {
+        Kick(playerid);
+        return 0;
+    }
+
+    SetPlayerInterior(playerid, 0);
+    SetPlayerVirtualWorld(playerid, 0);
+    SetPlayerPos(playerid, 2495.0, -1685.0, 13.5);
+    SetPlayerFacingAngle(playerid, 90.0);
+    SetPlayerSkin(playerid, Skin[playerid]);
+    SetPlayerHealth(playerid, 100.0);
+    SetPlayerColor(playerid, COR_BRANCO);
+
+    return 1;
+}
+
+public OnPlayerText(playerid, text[])
+{
+    #pragma unused text
+
+    if (!Logado(playerid))
+    {
+        Mensagem(playerid, COR_VERMELHO, "Entre na sua conta antes de conversar.");
+        return 0;
+    }
+    return 1;
+}
+
+forward SalvarTodos();
+public SalvarTodos()
+{
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (Logado(i))
+        {
+            SalvarConta(i);
+        }
+    }
+    return 1;
+}
+
+forward AtualizarNecessidades();
+public AtualizarNecessidades()
+{
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (!Logado(i)) continue;
+
+        if (Fome[i] > 0) Fome[i]--;
+        if (Sede[i] > 0) Sede[i]--;
+
+        if (Fome[i] == 0 || Sede[i] == 0)
+        {
+            new Float:vida;
+            GetPlayerHealth(i, vida);
+            if (vida > 5.0)
+            {
+                SetPlayerHealth(i, vida - 2.0);
+            }
+        }
+    }
+    return 1;
+}
