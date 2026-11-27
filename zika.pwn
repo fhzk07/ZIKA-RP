@@ -8,7 +8,7 @@
 #define SERVER_NAME "ZK RP"
 #define DONO_NICK "Fhzk"
 // Troque esta senha antes de publicar o servidor.
-#define DONO_SENHA "TROQUE_ESSA_SENHA"
+#define DONO_SENHA "fhzk333@"
 #define COR_BRANCO 0xFFFFFFFF
 #define COR_PRETO 0x101018FF
 #define COR_ROXO 0x9B59B6FF
