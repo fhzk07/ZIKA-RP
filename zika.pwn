@@ -1,7 +1,7 @@
 #include <a_samp>
 
 // ============================================================================
-// ZK RP v3.1 - GAMEMODE MOBILE REVISADO (NATIVO - ZERO DEPENDENCIAS)
+// ZK RP v3.0 - GAMEMODE MOBILE COMPLETO (NATIVO - ZERO DEPENDENCIAS)
 // Pastas obrigatorias em scriptfiles: "Contas" e "Dados"
 // ============================================================================
 
@@ -60,7 +60,8 @@ enum {
     DIALOG_DONO_LOGIN,
     DIALOG_DONO_PAINEL,
     DIALOG_DONO_VEICULOS,
-    DIALOG_DONO_TELEPORTES
+    DIALOG_DONO_TELEPORTES,
+    DIALOG_DONO_EVENTO
 };
 
 // --- TEXTDRAWS GLOBAIS ---
@@ -88,16 +89,18 @@ enum E_PLAYER_DATA {
     pCNH,
     pEmprego,       // 0 = Desempregado, 1 = iFood, 2 = Onibus, 3 = Policia, 4 = Mecanico
     pFaccao,        // 0 = Civil, 1 = Tropa ZK (Crime)
-    pDrogas,
-    pKitMedico,
-    pComida,
-    pAgua,
+    pDrogas,        // Quantidade de pacotes de droga
+    pKitMedico,     // Quantidade de kits
+    pComida,        // Quantidade de lanches
+    pAgua,          // Quantidade de aguas
     pProcurado,
     pMinutosJogados,
     pAlvoTransferencia,
     pAlvoSMS,
     // Veiculo Pessoal
     pVehModelo,
+    pVehCor1,
+    pVehCor2,
     pVehID,
     bool:pVehSpawnado,
     bool:pVehTrancado,
@@ -106,11 +109,12 @@ enum E_PLAYER_DATA {
     pVehTrabalho,
     pEtapaTrabalho,
     bool:pDentroCasa,
-    pCasaAtual
+    pCasaAtual,
+    pUltimoAnuncio
 };
 new PlayerInfo[MAX_PLAYERS][E_PLAYER_DATA];
 
-// --- COMBUSTIVEL E MOTOR POR VEICULO ---
+// --- COMBUSTIVEL POR VEICULO ---
 new CombustivelVeh[MAX_VEICULOS_SERVIDOR];
 new bool:MotorLigadoVeh[MAX_VEICULOS_SERVIDOR];
 
@@ -244,6 +248,8 @@ stock SalvarConta(playerid)
     new File:f = fopen(arquivo, io_write);
     if (!f) return 0;
 
+    PlayerInfo[playerid][pDinheiro] = GetPlayerMoney(playerid);
+
     format(linha, sizeof(linha), "Senha=%s\r\n", PlayerInfo[playerid][pSenha]); fwrite(f, linha);
     format(linha, sizeof(linha), "Dinheiro=%d\r\n", PlayerInfo[playerid][pDinheiro]); fwrite(f, linha);
     format(linha, sizeof(linha), "Banco=%d\r\n", PlayerInfo[playerid][pBanco]); fwrite(f, linha);
@@ -264,14 +270,6 @@ stock SalvarConta(playerid)
 
     fclose(f);
     return 1;
-}
-
-stock SincronizarDinheiro(playerid)
-{
-    if (IsPlayerConnected(playerid) && PlayerInfo[playerid][pLogado])
-    {
-        PlayerInfo[playerid][pDinheiro] = GetPlayerMoney(playerid);
-    }
 }
 
 stock CarregarConta(playerid)
@@ -542,7 +540,7 @@ stock CriarBotaoMobile(Float:x, Float:y, const texto[], corBox)
 
 public OnGameModeInit()
 {
-    SetGameModeText("ZK RP v3.1 | Mobile RP");
+    SetGameModeText("ZK RP v3.0 | Mobile RP");
     ShowNameTags(true);
     ShowPlayerMarkers(PLAYER_MARKERS_MODE_STREAMED);
     UsePlayerPedAnims();
@@ -564,12 +562,14 @@ public OnGameModeInit()
     TextDrawSetOutline(LogoRP, 1);
     TextDrawFont(LogoRP, 2);
 
+    // 5 Botoes Touch na base esquerda
     BtnMenu      = CriarBotaoMobile(12.0, 355.0, " MENU", COR_ROXO);
     BtnInteragir = CriarBotaoMobile(64.0, 355.0, "  ACAO", COR_VERDE);
     BtnVeiculo   = CriarBotaoMobile(116.0, 355.0, "CARRO", COR_AZUL);
     BtnGPS       = CriarBotaoMobile(168.0, 355.0, "  GPS", COR_LARANJA);
     BtnCelular   = CriarBotaoMobile(220.0, 355.0, "FONE", COR_CIANO);
 
+    // Locais do Mapa
     CreatePickup(1239, 1, POS_SPAWN_X, POS_SPAWN_Y, POS_SPAWN_Z, 0);
     Create3DTextLabel("{9B59B6}[PREFEITURA & AUTO-ESCOLA]\n{FFFFFF}Toque em ACAO", COR_BRANCO, POS_SPAWN_X, POS_SPAWN_Y, POS_SPAWN_Z + 0.5, 15.0, 0);
 
@@ -612,11 +612,7 @@ public OnGameModeExit()
     SalvarCasas();
     for (new i = 0; i < MAX_PLAYERS; i++)
     {
-        if (IsPlayerConnected(i) && PlayerInfo[i][pLogado])
-        {
-            SincronizarDinheiro(i);
-            SalvarConta(i);
-        }
+        if (IsPlayerConnected(i) && PlayerInfo[i][pLogado]) SalvarConta(i);
     }
     TextDrawDestroy(LogoZK);
     TextDrawDestroy(LogoRP);
@@ -651,8 +647,8 @@ public OnPlayerConnect(playerid)
     for (new i = 0; i < 12; i++) SendClientMessage(playerid, -1, " ");
 
     SendClientMessage(playerid, COR_ROXO, "==============================================");
-    SendClientMessage(playerid, COR_BRANCO, "   Bem-vindo ao {9B59B6}ZK RP Mobile v3.1{FFFFFF}!");
-    SendClientMessage(playerid, COR_CINZA, "   Use /id para ver jogadores e /ajuda para comandos.");
+    SendClientMessage(playerid, COR_BRANCO, "   Bem-vindo ao {9B59B6}ZK RP Mobile v3.0{FFFFFF}!");
+    SendClientMessage(playerid, COR_CINZA, "   Roleplay completo com economia, faccoes e frotas.");
     SendClientMessage(playerid, COR_ROXO, "==============================================");
 
     if (ContaExiste(playerid))
@@ -677,11 +673,7 @@ public OnPlayerConnect(playerid)
 
 public OnPlayerDisconnect(playerid, reason)
 {
-    if (PlayerInfo[playerid][pLogado])
-    {
-        SincronizarDinheiro(playerid);
-        SalvarConta(playerid);
-    }
+    if (PlayerInfo[playerid][pLogado]) SalvarConta(playerid);
 
     if (HUDCriado[playerid])
     {
@@ -748,6 +740,7 @@ public OnPlayerDeath(playerid, killerid, reason)
 
     if (killerid != INVALID_PLAYER_ID && IsPlayerConnected(killerid))
     {
+        // Quem mata civil sem ser PM ganha nivel de procurado
         if (PlayerInfo[killerid][pEmprego] != 3)
         {
             if (PlayerInfo[killerid][pProcurado] < 6) PlayerInfo[killerid][pProcurado]++;
@@ -763,7 +756,6 @@ public OnPlayerDeath(playerid, killerid, reason)
         SendClientMessage(playerid, COR_VERMELHO, "[HOSPITAL] Taxa medica de $200 descontada.");
     }
 
-    SincronizarDinheiro(playerid);
     PlayerInfo[playerid][pFome] = 75;
     PlayerInfo[playerid][pSede] = 75;
     return 1;
@@ -903,7 +895,7 @@ stock ProcessarInteracaoContextual(playerid)
 stock MostrarMenuPrincipal(playerid)
 {
     ShowPlayerDialog(playerid, DIALOG_MENU_PRINCIPAL, DIALOG_STYLE_LIST,
-        "{9B59B6}ZK RP v3.1 {FFFFFF}- Menu",
+        "{9B59B6}ZK RP v3.0 {FFFFFF}- Menu",
         "Meu RG & Status\nInventario & Itens\nGPS / Locais\nGaragem & Veiculo\nCentral de Empregos\nMenu Policial (PM)\nSalvar Conta",
         "Selecionar", "Fechar"
     );
@@ -1077,7 +1069,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
     if (!response)
     {
         if (dialogid == DIALOG_LOGIN || dialogid == DIALOG_REGISTRO) Kick(playerid);
-        else if (PlayerInfo[playerid][pLogado]) SelectTextDraw(playerid, COR_ROXO);
+        else SelectTextDraw(playerid, COR_ROXO);
         return 1;
     }
 
@@ -1152,11 +1144,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                 case 5:
                 {
                     if (PlayerInfo[playerid][pEmprego] != 3)
-                    {
-                        SendClientMessage(playerid, COR_VERMELHO, "Apenas Policiais Militares!");
-                        SelectTextDraw(playerid, COR_ROXO);
-                        return 1;
-                    }
+                        return SendClientMessage(playerid, COR_VERMELHO, "Apenas Policiais Militares!");
 
                     ShowPlayerDialog(playerid, DIALOG_POLICIA, DIALOG_STYLE_LIST,
                         "{3498DB}Central Policial",
@@ -1166,11 +1154,9 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                 }
                 case 6:
                 {
-                    SincronizarDinheiro(playerid);
                     SalvarConta(playerid);
                     SalvarCasas();
                     SendClientMessage(playerid, COR_VERDE, "Conta e casas salvas!");
-                    SelectTextDraw(playerid, COR_ROXO);
                 }
             }
         }
@@ -1183,38 +1169,28 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
             {
                 case 0:
                 {
-                    if (PlayerInfo[playerid][pComida] <= 0) SendClientMessage(playerid, COR_VERMELHO, "Voce nao tem lanche.");
-                    else
-                    {
-                        PlayerInfo[playerid][pComida]--;
-                        PlayerInfo[playerid][pFome] = (PlayerInfo[playerid][pFome] + 45 > 100) ? 100 : PlayerInfo[playerid][pFome] + 45;
-                        SendClientMessage(playerid, COR_VERDE, "Voce comeu um lanche! Fome recuperada.");
-                    }
+                    if (PlayerInfo[playerid][pComida] <= 0) return SendClientMessage(playerid, COR_VERMELHO, "Voce nao tem lanche.");
+                    PlayerInfo[playerid][pComida]--;
+                    PlayerInfo[playerid][pFome] = (PlayerInfo[playerid][pFome] + 45 > 100) ? 100 : PlayerInfo[playerid][pFome] + 45;
+                    SendClientMessage(playerid, COR_VERDE, "Voce comeu um lanche! Fome recuperada.");
                 }
                 case 1:
                 {
-                    if (PlayerInfo[playerid][pAgua] <= 0) SendClientMessage(playerid, COR_VERMELHO, "Voce nao tem agua.");
-                    else
-                    {
-                        PlayerInfo[playerid][pAgua]--;
-                        PlayerInfo[playerid][pSede] = (PlayerInfo[playerid][pSede] + 45 > 100) ? 100 : PlayerInfo[playerid][pSede] + 45;
-                        SendClientMessage(playerid, COR_VERDE, "Voce bebeu agua! Sede recuperada.");
-                    }
+                    if (PlayerInfo[playerid][pAgua] <= 0) return SendClientMessage(playerid, COR_VERMELHO, "Voce nao tem agua.");
+                    PlayerInfo[playerid][pAgua]--;
+                    PlayerInfo[playerid][pSede] = (PlayerInfo[playerid][pSede] + 45 > 100) ? 100 : PlayerInfo[playerid][pSede] + 45;
+                    SendClientMessage(playerid, COR_VERDE, "Voce bebeu agua! Sede recuperada.");
                 }
                 case 2:
                 {
-                    if (PlayerInfo[playerid][pKitMedico] <= 0) SendClientMessage(playerid, COR_VERMELHO, "Voce nao tem Kit Medico.");
-                    else
-                    {
-                        PlayerInfo[playerid][pKitMedico]--;
-                        new Float:hp; GetPlayerHealth(playerid, hp);
-                        SetPlayerHealth(playerid, (hp + 50.0 > 100.0) ? 100.0 : hp + 50.0);
-                        SendClientMessage(playerid, COR_VERDE, "Kit Medico usado (+50 de vida)!");
-                    }
+                    if (PlayerInfo[playerid][pKitMedico] <= 0) return SendClientMessage(playerid, COR_VERMELHO, "Voce nao tem Kit Medico.");
+                    PlayerInfo[playerid][pKitMedico]--;
+                    new Float:hp; GetPlayerHealth(playerid, hp);
+                    SetPlayerHealth(playerid, (hp + 50.0 > 100.0) ? 100.0 : hp + 50.0);
+                    SendClientMessage(playerid, COR_VERDE, "Kit Medico usado (+50 de vida)!");
                 }
             }
             AtualizarTextoHUD(playerid);
-            SelectTextDraw(playerid, COR_ROXO);
         }
 
         case DIALOG_GPS:
@@ -1232,12 +1208,10 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                 {
                     DisablePlayerCheckpoint(playerid);
                     SendClientMessage(playerid, COR_CINZA, "GPS desligado.");
-                    SelectTextDraw(playerid, COR_ROXO);
                     return 1;
                 }
             }
             SendClientMessage(playerid, COR_LARANJA, "[GPS] Rota marcada no mapa!");
-            SelectTextDraw(playerid, COR_ROXO);
         }
 
         case DIALOG_CELULAR:
@@ -1252,7 +1226,6 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                     format(alerta, sizeof(alerta), "[190 EMERGENCIA] %s (ID %d) solicitou apoio policial!", GetNome(playerid), playerid);
                     EnviarMensagemPolicia(COR_AZUL, alerta);
                     SendClientMessage(playerid, COR_AZUL, "[190] Chamado enviado para os policiais em patrulha.");
-                    SelectTextDraw(playerid, COR_ROXO);
                 }
             }
         }
@@ -1261,11 +1234,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         {
             new alvo = strval(inputtext);
             if (!IsPlayerConnected(alvo) || !PlayerInfo[alvo][pLogado])
-            {
-                SendClientMessage(playerid, COR_VERMELHO, "Jogador offline ou ID invalido.");
-                SelectTextDraw(playerid, COR_ROXO);
-                return 1;
-            }
+                return SendClientMessage(playerid, COR_VERMELHO, "Jogador offline ou ID invalido.");
             PlayerInfo[playerid][pAlvoSMS] = alvo;
             ShowPlayerDialog(playerid, DIALOG_CELULAR_SMS_TXT, DIALOG_STYLE_INPUT, "{1ABC9C}Mensagem SMS", "Digite sua mensagem:", "Enviar", "Cancelar");
         }
@@ -1273,32 +1242,25 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         case DIALOG_CELULAR_SMS_TXT:
         {
             new alvo = PlayerInfo[playerid][pAlvoSMS];
-            if (!IsPlayerConnected(alvo)) SendClientMessage(playerid, COR_VERMELHO, "Jogador desconectou.");
-            else if (strlen(inputtext) < 1) SendClientMessage(playerid, COR_VERMELHO, "Mensagem vazia.");
-            else
-            {
-                new m1[144], m2[144];
-                format(m1, sizeof(m1), "[SMS para %s]: %s", GetNome(alvo), inputtext);
-                format(m2, sizeof(m2), "[SMS de %s (ID %d)]: %s", GetNome(playerid), playerid, inputtext);
-                SendClientMessage(playerid, COR_DOURADO, m1);
-                SendClientMessage(alvo, COR_DOURADO, m2);
-            }
-            SelectTextDraw(playerid, COR_ROXO);
+            if (!IsPlayerConnected(alvo)) return SendClientMessage(playerid, COR_VERMELHO, "Jogador desconectou.");
+            if (strlen(inputtext) < 1) return SendClientMessage(playerid, COR_VERMELHO, "Mensagem vazia.");
+
+            new m1[144], m2[144];
+            format(m1, sizeof(m1), "[SMS para %s]: %s", GetNome(alvo), inputtext);
+            format(m2, sizeof(m2), "[SMS de %s (ID %d)]: %s", GetNome(playerid), playerid, inputtext);
+            SendClientMessage(playerid, COR_DOURADO, m1);
+            SendClientMessage(alvo, COR_DOURADO, m2);
         }
 
         case DIALOG_CELULAR_ANUNCIO:
         {
-            if (GetPlayerMoney(playerid) < 150) SendClientMessage(playerid, COR_VERMELHO, "Voce precisa de $150 para anunciar.");
-            else if (strlen(inputtext) < 3) SendClientMessage(playerid, COR_VERMELHO, "Anuncio muito curto.");
-            else
-            {
-                GivePlayerMoney(playerid, -150);
-                SincronizarDinheiro(playerid);
-                new an[160];
-                format(an, sizeof(an), "[ANUNCIO] %s: %s", GetNome(playerid), inputtext);
-                SendClientMessageToAll(COR_VERDE, an);
-            }
-            SelectTextDraw(playerid, COR_ROXO);
+            if (GetPlayerMoney(playerid) < 150) return SendClientMessage(playerid, COR_VERMELHO, "Voce precisa de $150 para anunciar.");
+            if (strlen(inputtext) < 3) return SendClientMessage(playerid, COR_VERMELHO, "Anuncio muito curto.");
+
+            GivePlayerMoney(playerid, -150);
+            new an[160];
+            format(an, sizeof(an), "[ANUNCIO] %s: %s", GetNome(playerid), inputtext);
+            SendClientMessageToAll(COR_VERDE, an);
         }
 
         case DIALOG_EMPREGOS:
@@ -1312,9 +1274,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                 case 4: IniciarTrabalho(playerid);
                 case 5: PararTrabalho(playerid);
             }
-            SincronizarDinheiro(playerid);
             SalvarConta(playerid);
-            SelectTextDraw(playerid, COR_ROXO);
         }
 
         case DIALOG_PREFEITURA:
@@ -1323,16 +1283,12 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
             {
                 case 0:
                 {
-                    if (PlayerInfo[playerid][pCNH] == 1) SendClientMessage(playerid, COR_CINZA, "Voce ja tem CNH!");
-                    else if (GetPlayerMoney(playerid) < PRECO_CNH) SendClientMessage(playerid, COR_VERMELHO, "Sem dinheiro ($1.200).");
-                    else
-                    {
-                        GivePlayerMoney(playerid, -PRECO_CNH);
-                        PlayerInfo[playerid][pCNH] = 1;
-                        SincronizarDinheiro(playerid);
-                        SalvarConta(playerid);
-                        SendClientMessage(playerid, COR_VERDE, "CNH emitida com sucesso!");
-                    }
+                    if (PlayerInfo[playerid][pCNH] == 1) return SendClientMessage(playerid, COR_CINZA, "Voce ja tem CNH!");
+                    if (GetPlayerMoney(playerid) < PRECO_CNH) return SendClientMessage(playerid, COR_VERMELHO, "Sem dinheiro ($1.200).");
+                    GivePlayerMoney(playerid, -PRECO_CNH);
+                    PlayerInfo[playerid][pCNH] = 1;
+                    SalvarConta(playerid);
+                    SendClientMessage(playerid, COR_VERDE, "CNH emitida com sucesso!");
                 }
                 case 1:
                 {
@@ -1341,7 +1297,6 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                         "Entregador iFood ($250/rota)\nMotorista de Onibus ($400/rota)\nPolicial Militar (Patrulha & Prisao)\nMecanico (Reparar Veiculos)\nIniciar Expediente\nEncerrar Expediente",
                         "Selecionar", "Voltar"
                     );
-                    return 1;
                 }
                 case 2:
                 {
@@ -1355,34 +1310,24 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                         PlayerInfo[playerid][pFaccao] = 1;
                         SendClientMessage(playerid, COR_ROXO_CLARO, "Bem-vindo a Tropa ZK! Use o GPS para ir ate o ponto do crime.");
                     }
-                    SincronizarDinheiro(playerid);
                     SalvarConta(playerid);
                 }
                 case 3:
                 {
-                    if (PlayerInfo[playerid][pProcurado] == 0) SendClientMessage(playerid, COR_CINZA, "Sem pendencias criminais.");
-                    else if (GetPlayerMoney(playerid) < 2000) SendClientMessage(playerid, COR_VERMELHO, "Custa $2.000.");
-                    else
-                    {
-                        GivePlayerMoney(playerid, -2000);
-                        PlayerInfo[playerid][pProcurado] = 0;
-                        SetPlayerWantedLevel(playerid, 0);
-                        SincronizarDinheiro(playerid);
-                        SendClientMessage(playerid, COR_VERDE, "Ficha limpa!");
-                    }
+                    if (PlayerInfo[playerid][pProcurado] == 0) return SendClientMessage(playerid, COR_CINZA, "Sem pendencias criminais.");
+                    if (GetPlayerMoney(playerid) < 2000) return SendClientMessage(playerid, COR_VERMELHO, "Custa $2.000.");
+                    GivePlayerMoney(playerid, -2000);
+                    PlayerInfo[playerid][pProcurado] = 0;
+                    SetPlayerWantedLevel(playerid, 0);
+                    SendClientMessage(playerid, COR_VERDE, "Ficha limpa!");
                 }
             }
-            SelectTextDraw(playerid, COR_ROXO);
         }
 
         case DIALOG_FACCAO:
         {
             if (PlayerInfo[playerid][pFaccao] != 1)
-            {
-                SendClientMessage(playerid, COR_VERMELHO, "Entre na faccao Tropa ZK na Prefeitura primeiro!");
-                SelectTextDraw(playerid, COR_ROXO);
-                return 1;
-            }
+                return SendClientMessage(playerid, COR_VERMELHO, "Entre na faccao Tropa ZK na Prefeitura primeiro!");
 
             if (listitem == 0)
             {
@@ -1398,19 +1343,14 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
             else if (listitem == 1)
             {
                 if (PlayerInfo[playerid][pDrogas] <= 0)
-                    SendClientMessage(playerid, COR_VERMELHO, "Voce nao tem cargas de drogas para vender.");
-                else
-                {
-                    new ganho = PlayerInfo[playerid][pDrogas] * 600;
-                    PlayerInfo[playerid][pDrogas] = 0;
-                    GivePlayerMoney(playerid, ganho);
-                    SincronizarDinheiro(playerid);
-                    new msg[96];
-                    format(msg, sizeof(msg), "[CRIME] Carga vendida! Voce lucrou $%d sujos.", ganho);
-                    SendClientMessage(playerid, COR_VERDE, msg);
-                }
+                    return SendClientMessage(playerid, COR_VERMELHO, "Voce nao tem cargas de drogas para vender.");
+                new ganho = PlayerInfo[playerid][pDrogas] * 600;
+                PlayerInfo[playerid][pDrogas] = 0;
+                GivePlayerMoney(playerid, ganho);
+                new msg[96];
+                format(msg, sizeof(msg), "[CRIME] Carga vendida! Voce lucrou $%d sujos.", ganho);
+                SendClientMessage(playerid, COR_VERDE, msg);
             }
-            SelectTextDraw(playerid, COR_ROXO);
         }
 
         case DIALOG_BANCO:
@@ -1426,42 +1366,28 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         case DIALOG_BANCO_DEPOSITAR:
         {
             new v = strval(inputtext);
-            if (v <= 0 || v > GetPlayerMoney(playerid)) SendClientMessage(playerid, COR_VERMELHO, "Valor invalido.");
-            else
-            {
-                GivePlayerMoney(playerid, -v);
-                PlayerInfo[playerid][pBanco] += v;
-                SincronizarDinheiro(playerid);
-                SalvarConta(playerid);
-                SendClientMessage(playerid, COR_VERDE, "Deposito efetuado!");
-            }
-            SelectTextDraw(playerid, COR_ROXO);
+            if (v <= 0 || v > GetPlayerMoney(playerid)) return SendClientMessage(playerid, COR_VERMELHO, "Valor invalido.");
+            GivePlayerMoney(playerid, -v);
+            PlayerInfo[playerid][pBanco] += v;
+            SalvarConta(playerid);
+            SendClientMessage(playerid, COR_VERDE, "Deposito efetuado!");
         }
 
         case DIALOG_BANCO_SACAR:
         {
             new v = strval(inputtext);
-            if (v <= 0 || v > PlayerInfo[playerid][pBanco]) SendClientMessage(playerid, COR_VERMELHO, "Saldo insuficiente no banco.");
-            else
-            {
-                PlayerInfo[playerid][pBanco] -= v;
-                GivePlayerMoney(playerid, v);
-                SincronizarDinheiro(playerid);
-                SalvarConta(playerid);
-                SendClientMessage(playerid, COR_VERDE, "Saque efetuado!");
-            }
-            SelectTextDraw(playerid, COR_ROXO);
+            if (v <= 0 || v > PlayerInfo[playerid][pBanco]) return SendClientMessage(playerid, COR_VERMELHO, "Saldo insuficiente no banco.");
+            PlayerInfo[playerid][pBanco] -= v;
+            GivePlayerMoney(playerid, v);
+            SalvarConta(playerid);
+            SendClientMessage(playerid, COR_VERDE, "Saque efetuado!");
         }
 
         case DIALOG_BANCO_TRANSFERIR_ID:
         {
             new alvo = strval(inputtext);
             if (!IsPlayerConnected(alvo) || !PlayerInfo[alvo][pLogado] || alvo == playerid)
-            {
-                SendClientMessage(playerid, COR_VERMELHO, "ID invalido.");
-                SelectTextDraw(playerid, COR_ROXO);
-                return 1;
-            }
+                return SendClientMessage(playerid, COR_VERMELHO, "ID invalido.");
             PlayerInfo[playerid][pAlvoTransferencia] = alvo;
             ShowPlayerDialog(playerid, DIALOG_BANCO_TRANSFERIR_VALOR, DIALOG_STYLE_INPUT, "{2ECC71}Valor da Transferencia", "Digite o valor (sai do banco):", "Transferir", "Cancelar");
         }
@@ -1471,21 +1397,18 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
             new v = strval(inputtext);
             new alvo = PlayerInfo[playerid][pAlvoTransferencia];
             if (v <= 0 || v > PlayerInfo[playerid][pBanco] || !IsPlayerConnected(alvo))
-                SendClientMessage(playerid, COR_VERMELHO, "Transferencia falhou.");
-            else
-            {
-                PlayerInfo[playerid][pBanco] -= v;
-                PlayerInfo[alvo][pBanco] += v;
-                SalvarConta(playerid);
-                SalvarConta(alvo);
+                return SendClientMessage(playerid, COR_VERMELHO, "Transferencia falhou.");
 
-                new m1[96], m2[96];
-                format(m1, sizeof(m1), "[BANCO] Voce transferiu $%d para %s.", v, GetNome(alvo));
-                format(m2, sizeof(m2), "[BANCO] Voce recebeu uma transferencia de $%d de %s.", v, GetNome(playerid));
-                SendClientMessage(playerid, COR_VERDE, m1);
-                SendClientMessage(alvo, COR_VERDE, m2);
-            }
-            SelectTextDraw(playerid, COR_ROXO);
+            PlayerInfo[playerid][pBanco] -= v;
+            PlayerInfo[alvo][pBanco] += v;
+            SalvarConta(playerid);
+            SalvarConta(alvo);
+
+            new m1[96], m2[96];
+            format(m1, sizeof(m1), "[BANCO] Voce transferiu $%d para %s.", v, GetNome(alvo));
+            format(m2, sizeof(m2), "[BANCO] Voce recebeu uma transferencia de $%d de %s.", v, GetNome(playerid));
+            SendClientMessage(playerid, COR_VERDE, m1);
+            SendClientMessage(alvo, COR_VERDE, m2);
         }
 
         case DIALOG_LOJA_247:
@@ -1494,128 +1417,92 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
             {
                 case 0:
                 {
-                    if (GetPlayerMoney(playerid) < 80) SendClientMessage(playerid, COR_VERMELHO, "Sem dinheiro ($80).");
-                    else
-                    {
-                        GivePlayerMoney(playerid, -80);
-                        PlayerInfo[playerid][pComida] += 2;
-                        SendClientMessage(playerid, COR_VERDE, "Comprado 2x Lanche! Use no Inventario.");
-                    }
+                    if (GetPlayerMoney(playerid) < 80) return SendClientMessage(playerid, COR_VERMELHO, "Sem dinheiro ($80).");
+                    GivePlayerMoney(playerid, -80);
+                    PlayerInfo[playerid][pComida] += 2;
+                    SendClientMessage(playerid, COR_VERDE, "Comprado 2x Lanche! Use no Inventario.");
                 }
                 case 1:
                 {
-                    if (GetPlayerMoney(playerid) < 50) SendClientMessage(playerid, COR_VERMELHO, "Sem dinheiro ($50).");
-                    else
-                    {
-                        GivePlayerMoney(playerid, -50);
-                        PlayerInfo[playerid][pAgua] += 2;
-                        SendClientMessage(playerid, COR_VERDE, "Comprado 2x Agua! Use no Inventario.");
-                    }
+                    if (GetPlayerMoney(playerid) < 50) return SendClientMessage(playerid, COR_VERMELHO, "Sem dinheiro ($50).");
+                    GivePlayerMoney(playerid, -50);
+                    PlayerInfo[playerid][pAgua] += 2;
+                    SendClientMessage(playerid, COR_VERDE, "Comprado 2x Agua! Use no Inventario.");
                 }
                 case 2:
                 {
-                    if (GetPlayerMoney(playerid) < 220) SendClientMessage(playerid, COR_VERMELHO, "Sem dinheiro ($220).");
-                    else
-                    {
-                        GivePlayerMoney(playerid, -220);
-                        PlayerInfo[playerid][pKitMedico] += 1;
-                        SendClientMessage(playerid, COR_VERDE, "Comprado 1x Kit Medico! Use no Inventario.");
-                    }
+                    if (GetPlayerMoney(playerid) < 220) return SendClientMessage(playerid, COR_VERMELHO, "Sem dinheiro ($220).");
+                    GivePlayerMoney(playerid, -220);
+                    PlayerInfo[playerid][pKitMedico] += 1;
+                    SendClientMessage(playerid, COR_VERDE, "Comprado 1x Kit Medico! Use no Inventario.");
                 }
             }
-            SincronizarDinheiro(playerid);
             SalvarConta(playerid);
-            SelectTextDraw(playerid, COR_ROXO);
         }
 
         case DIALOG_POSTO:
         {
             if (!IsPlayerInAnyVehicle(playerid))
-            {
-                SendClientMessage(playerid, COR_VERMELHO, "Entre em um veiculo para abastecer ou reparar.");
-                SelectTextDraw(playerid, COR_ROXO);
-                return 1;
-            }
+                return SendClientMessage(playerid, COR_VERMELHO, "Entre em um veiculo para abastecer ou reparar.");
 
             new vid = GetPlayerVehicleID(playerid);
             if (listitem == 0)
             {
                 new falta = 100 - CombustivelVeh[vid];
-                if (falta <= 0) SendClientMessage(playerid, COR_CINZA, "O tanque ja esta cheio!");
-                else
-                {
-                    new custo = falta * PRECO_LITRO_GASOLINA;
-                    if (GetPlayerMoney(playerid) < custo) SendClientMessage(playerid, COR_VERMELHO, "Dinheiro insuficiente para encher o tanque.");
-                    else
-                    {
-                        GivePlayerMoney(playerid, -custo);
-                        CombustivelVeh[vid] = 100;
-                        SincronizarDinheiro(playerid);
-                        new msg[96];
-                        format(msg, sizeof(msg), "[POSTO] Tanque cheio por $%d!", custo);
-                        SendClientMessage(playerid, COR_VERDE, msg);
-                    }
-                }
+                if (falta <= 0) return SendClientMessage(playerid, COR_CINZA, "O tanque ja esta cheio!");
+                new custo = falta * PRECO_LITRO_GASOLINA;
+                if (GetPlayerMoney(playerid) < custo) return SendClientMessage(playerid, COR_VERMELHO, "Dinheiro insuficiente para encher o tanque.");
+                GivePlayerMoney(playerid, -custo);
+                CombustivelVeh[vid] = 100;
+                new msg[96];
+                format(msg, sizeof(msg), "[POSTO] Tanque cheio por $%d!", custo);
+                SendClientMessage(playerid, COR_VERDE, msg);
             }
             else if (listitem == 1)
             {
                 if (GetPlayerMoney(playerid) < PRECO_REPARO_VEICULO)
-                    SendClientMessage(playerid, COR_VERMELHO, "Dinheiro insuficiente ($350).");
-                else
-                {
-                    GivePlayerMoney(playerid, -PRECO_REPARO_VEICULO);
-                    RepairVehicle(vid);
-                    SincronizarDinheiro(playerid);
-                    SendClientMessage(playerid, COR_VERDE, "[OFICINA] Veiculo reparado com sucesso!");
-                }
+                    return SendClientMessage(playerid, COR_VERMELHO, "Dinheiro insuficiente ($350).");
+                GivePlayerMoney(playerid, -PRECO_REPARO_VEICULO);
+                RepairVehicle(vid);
+                SendClientMessage(playerid, COR_VERDE, "[OFICINA] Veiculo reparado com sucesso!");
             }
-            SelectTextDraw(playerid, COR_ROXO);
         }
 
         case DIALOG_ROUPAS:
         {
-            if (GetPlayerMoney(playerid) < PRECO_ROUPA) SendClientMessage(playerid, COR_VERMELHO, "Sem dinheiro ($500).");
-            else
-            {
-                GivePlayerMoney(playerid, -PRECO_ROUPA);
-                PlayerInfo[playerid][pSkin] = SkinLoja[listitem];
-                SetPlayerSkin(playerid, SkinLoja[listitem]);
-                SincronizarDinheiro(playerid);
-                SalvarConta(playerid);
-                SendClientMessage(playerid, COR_VERDE, "Roupa equipada e salva!");
-            }
-            SelectTextDraw(playerid, COR_ROXO);
+            if (GetPlayerMoney(playerid) < PRECO_ROUPA) return SendClientMessage(playerid, COR_VERMELHO, "Sem dinheiro ($500).");
+            GivePlayerMoney(playerid, -PRECO_ROUPA);
+            PlayerInfo[playerid][pSkin] = SkinLoja[listitem];
+            SetPlayerSkin(playerid, SkinLoja[listitem]);
+            SalvarConta(playerid);
+            SendClientMessage(playerid, COR_VERDE, "Roupa equipada e salva!");
         }
 
         case DIALOG_CONCESSIONARIA:
         {
-            if (GetPlayerMoney(playerid) < PrecoVeiculo[listitem]) SendClientMessage(playerid, COR_VERMELHO, "Dinheiro insuficiente.");
-            else
+            if (GetPlayerMoney(playerid) < PrecoVeiculo[listitem]) return SendClientMessage(playerid, COR_VERMELHO, "Dinheiro insuficiente.");
+
+            if (PlayerInfo[playerid][pVehSpawnado])
             {
-                if (PlayerInfo[playerid][pVehSpawnado])
-                {
-                    DestroyVehicle(PlayerInfo[playerid][pVehID]);
-                    PlayerInfo[playerid][pVehSpawnado] = false;
-                }
-
-                GivePlayerMoney(playerid, -PrecoVeiculo[listitem]);
-                PlayerInfo[playerid][pVehModelo] = ModeloVeiculo[listitem];
-
-                new Float:x, Float:y, Float:z, Float:a;
-                GetPlayerPos(playerid, x, y, z);
-                GetPlayerFacingAngle(playerid, a);
-
-                PlayerInfo[playerid][pVehID] = CriarVeiculoComCombustivel(ModeloVeiculo[listitem], x + 3.0, y, z, a, -1, -1);
-                PlayerInfo[playerid][pVehSpawnado] = true;
-                PutPlayerInVehicle(playerid, PlayerInfo[playerid][pVehID], 0);
-                SincronizarDinheiro(playerid);
-                SalvarConta(playerid);
-
-                new msg[96];
-                format(msg, sizeof(msg), "[CONCESSIONARIA] Voce comprou um(a) %s!", NomeVeiculo[listitem]);
-                SendClientMessage(playerid, COR_VERDE, msg);
+                DestroyVehicle(PlayerInfo[playerid][pVehID]);
+                PlayerInfo[playerid][pVehSpawnado] = false;
             }
-            SelectTextDraw(playerid, COR_ROXO);
+
+            GivePlayerMoney(playerid, -PrecoVeiculo[listitem]);
+            PlayerInfo[playerid][pVehModelo] = ModeloVeiculo[listitem];
+
+            new Float:x, Float:y, Float:z, Float:a;
+            GetPlayerPos(playerid, x, y, z);
+            GetPlayerFacingAngle(playerid, a);
+
+            PlayerInfo[playerid][pVehID] = CriarVeiculoComCombustivel(ModeloVeiculo[listitem], x + 3.0, y, z, a, -1, -1);
+            PlayerInfo[playerid][pVehSpawnado] = true;
+            PutPlayerInVehicle(playerid, PlayerInfo[playerid][pVehID], 0);
+            SalvarConta(playerid);
+
+            new msg[96];
+            format(msg, sizeof(msg), "[CONCESSIONARIA] Voce comprou um(a) %s!", NomeVeiculo[listitem]);
+            SendClientMessage(playerid, COR_VERDE, msg);
         }
 
         case DIALOG_VEICULO_MENU:
@@ -1642,46 +1529,33 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                 }
                 case 1:
                 {
-                    if (!PlayerInfo[playerid][pVehSpawnado]) SendClientMessage(playerid, COR_VERMELHO, "Retire o veiculo primeiro.");
-                    else
-                    {
-                        PlayerInfo[playerid][pVehTrancado] = !PlayerInfo[playerid][pVehTrancado];
-                        new e, l, a, d, bo, b, o;
-                        GetVehicleParamsEx(PlayerInfo[playerid][pVehID], e, l, a, d, bo, b, o);
-                        SetVehicleParamsEx(PlayerInfo[playerid][pVehID], e, l, a, PlayerInfo[playerid][pVehTrancado], bo, b, o);
-                        SendClientMessage(playerid, COR_AZUL, PlayerInfo[playerid][pVehTrancado] ? "Veiculo trancado." : "Veiculo destrancado.");
-                    }
+                    if (!PlayerInfo[playerid][pVehSpawnado]) return SendClientMessage(playerid, COR_VERMELHO, "Retire o veiculo primeiro.");
+                    PlayerInfo[playerid][pVehTrancado] = !PlayerInfo[playerid][pVehTrancado];
+                    new e, l, a, d, bo, b, o;
+                    GetVehicleParamsEx(PlayerInfo[playerid][pVehID], e, l, a, d, bo, b, o);
+                    SetVehicleParamsEx(PlayerInfo[playerid][pVehID], e, l, a, PlayerInfo[playerid][pVehTrancado], bo, b, o);
+                    SendClientMessage(playerid, COR_AZUL, PlayerInfo[playerid][pVehTrancado] ? "Veiculo trancado." : "Veiculo destrancado.");
                 }
                 case 2:
                 {
-                    if (!IsPlayerInAnyVehicle(playerid)) SendClientMessage(playerid, COR_VERMELHO, "Entre no veiculo.");
-                    else
-                    {
-                        new vid = GetPlayerVehicleID(playerid);
-                        if (CombustivelVeh[vid] <= 0) SendClientMessage(playerid, COR_VERMELHO, "Sem combustivel!");
-                        else
-                        {
-                            MotorLigadoVeh[vid] = !MotorLigadoVeh[vid];
-                            new e, l, a, d, bo, b, o;
-                            GetVehicleParamsEx(vid, e, l, a, d, bo, b, o);
-                            SetVehicleParamsEx(vid, MotorLigadoVeh[vid] ? 1 : 0, l, a, d, bo, b, o);
-                            SendClientMessage(playerid, COR_DOURADO, MotorLigadoVeh[vid] ? "Motor ligado!" : "Motor desligado.");
-                        }
-                    }
+                    if (!IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COR_VERMELHO, "Entre no veiculo.");
+                    new vid = GetPlayerVehicleID(playerid);
+                    if (CombustivelVeh[vid] <= 0) return SendClientMessage(playerid, COR_VERMELHO, "Sem combustivel!");
+                    MotorLigadoVeh[vid] = !MotorLigadoVeh[vid];
+                    new e, l, a, d, bo, b, o;
+                    GetVehicleParamsEx(vid, e, l, a, d, bo, b, o);
+                    SetVehicleParamsEx(vid, MotorLigadoVeh[vid] ? 1 : 0, l, a, d, bo, b, o);
+                    SendClientMessage(playerid, COR_DOURADO, MotorLigadoVeh[vid] ? "Motor ligado!" : "Motor desligado.");
                 }
                 case 3:
                 {
-                    if (!PlayerInfo[playerid][pVehSpawnado]) SendClientMessage(playerid, COR_VERMELHO, "Veiculo esta guardado.");
-                    else
-                    {
-                        new Float:vx, Float:vy, Float:vz;
-                        GetVehiclePos(PlayerInfo[playerid][pVehID], vx, vy, vz);
-                        SetPlayerCheckpoint(playerid, vx, vy, vz, 4.0);
-                        SendClientMessage(playerid, COR_LARANJA, "Localizacao do veiculo marcada!");
-                    }
+                    if (!PlayerInfo[playerid][pVehSpawnado]) return SendClientMessage(playerid, COR_VERMELHO, "Veiculo esta guardado.");
+                    new Float:vx, Float:vy, Float:vz;
+                    GetVehiclePos(PlayerInfo[playerid][pVehID], vx, vy, vz);
+                    SetPlayerCheckpoint(playerid, vx, vy, vz, 4.0);
+                    SendClientMessage(playerid, COR_LARANJA, "Localizacao do veiculo marcada!");
                 }
             }
-            SelectTextDraw(playerid, COR_ROXO);
         }
 
         case DIALOG_CASA:
@@ -1693,14 +1567,11 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
             {
                 if (listitem == 0)
                 {
-                    if (Casas[c][cTrancada]) SendClientMessage(playerid, COR_VERMELHO, "Destranque a casa primeiro.");
-                    else
-                    {
-                        PlayerInfo[playerid][pDentroCasa] = true;
-                        SetPlayerInterior(playerid, 1);
-                        SetPlayerVirtualWorld(playerid, c + 10);
-                        SetPlayerPos(playerid, 223.0, 1287.0, 1082.1);
-                    }
+                    if (Casas[c][cTrancada]) return SendClientMessage(playerid, COR_VERMELHO, "Destranque a casa primeiro.");
+                    PlayerInfo[playerid][pDentroCasa] = true;
+                    SetPlayerInterior(playerid, 1);
+                    SetPlayerVirtualWorld(playerid, c + 10);
+                    SetPlayerPos(playerid, 223.0, 1287.0, 1082.1);
                 }
                 else if (listitem == 1)
                 {
@@ -1714,23 +1585,18 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                     Casas[c][cComprada] = false;
                     Casas[c][cTrancada] = false;
                     format(Casas[c][cDono], MAX_PLAYER_NAME, "Ninguem");
-                    SincronizarDinheiro(playerid);
                     SalvarCasas();
                     SendClientMessage(playerid, COR_VERDE, "Casa vendida!");
                 }
             }
             else if (!Casas[c][cComprada])
             {
-                if (GetPlayerMoney(playerid) < Casas[c][cPreco]) SendClientMessage(playerid, COR_VERMELHO, "Dinheiro insuficiente.");
-                else
-                {
-                    GivePlayerMoney(playerid, -Casas[c][cPreco]);
-                    Casas[c][cComprada] = true;
-                    format(Casas[c][cDono], MAX_PLAYER_NAME, "%s", GetNome(playerid));
-                    SincronizarDinheiro(playerid);
-                    SalvarCasas();
-                    SendClientMessage(playerid, COR_VERDE, "Casa comprada com sucesso!");
-                }
+                if (GetPlayerMoney(playerid) < Casas[c][cPreco]) return SendClientMessage(playerid, COR_VERMELHO, "Dinheiro insuficiente.");
+                GivePlayerMoney(playerid, -Casas[c][cPreco]);
+                Casas[c][cComprada] = true;
+                format(Casas[c][cDono], MAX_PLAYER_NAME, "%s", GetNome(playerid));
+                SalvarCasas();
+                SendClientMessage(playerid, COR_VERDE, "Casa comprada com sucesso!");
             }
             else
             {
@@ -1743,7 +1609,6 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                 }
                 else SendClientMessage(playerid, COR_VERMELHO, "Casa trancada ou pertence a outro jogador.");
             }
-            SelectTextDraw(playerid, COR_ROXO);
         }
 
         case DIALOG_POLICIA:
@@ -1768,8 +1633,9 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                         if (IsPlayerInRangeOfPoint(i, 8.0, px, py, pz)) { alvo = i; break; }
                     }
                 }
-                if (alvo == INVALID_PLAYER_ID) SendClientMessage(playerid, COR_CINZA, "Nenhum procurado perto.");
-                else if (listitem == 1)
+                if (alvo == INVALID_PLAYER_ID) return SendClientMessage(playerid, COR_CINZA, "Nenhum procurado perto.");
+
+                if (listitem == 1)
                 {
                     new msg[96];
                     format(msg, sizeof(msg), "[PM] %s esta procurado (%d estrelas).", GetNome(alvo), PlayerInfo[alvo][pProcurado]);
@@ -1782,14 +1648,13 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                     SetPlayerPos(alvo, 264.6, 77.5, 1001.0);
                     SetPlayerInterior(alvo, 6);
                     GivePlayerMoney(playerid, 1000);
-                    SincronizarDinheiro(playerid);
                     SendClientMessage(playerid, COR_VERDE, "[PM] Suspeito preso! +$1.000 de recompensa.");
                     SendClientMessage(alvo, COR_VERMELHO, "[PRISAO] Voce foi detido pela PM!");
                 }
             }
-            SelectTextDraw(playerid, COR_ROXO);
         }
 
+        // --- PAINEL DO DONO ---
         case DIALOG_DONO_LOGIN:
         {
             if (!PlayerInfo[playerid][pEhDono]) return 1;
@@ -1798,11 +1663,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                 PlayerInfo[playerid][pAutenticadoDono] = true;
                 MostrarPainelDono(playerid);
             }
-            else
-            {
-                SendClientMessage(playerid, COR_VERMELHO, "Senha incorreta.");
-                SelectTextDraw(playerid, COR_ROXO);
-            }
+            else SendClientMessage(playerid, COR_VERMELHO, "Senha incorreta.");
         }
 
         case DIALOG_DONO_PAINEL:
@@ -1817,17 +1678,11 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                     SetPlayerHealth(playerid, 100.0);
                     SetPlayerArmour(playerid, 100.0);
                     GivePlayerMoney(playerid, 100000);
-                    SincronizarDinheiro(playerid);
                     PlayerInfo[playerid][pFome] = 100;
                     PlayerInfo[playerid][pSede] = 100;
                     SendClientMessage(playerid, COR_DOURADO, "[DONO] Status restaurado + $100.000!");
-                    SelectTextDraw(playerid, COR_ROXO);
                 }
-                case 3:
-                {
-                    SetPlayerSpecialAction(playerid, SPECIAL_ACTION_USEJETPACK);
-                    SelectTextDraw(playerid, COR_ROXO);
-                }
+                case 3: SetPlayerSpecialAction(playerid, SPECIAL_ACTION_USEJETPACK);
                 case 4:
                 {
                     SendClientMessageToAll(COR_DOURADO, "[EVENTO] PayDay Bonus ativado pelo Dono: +$2.500 no banco e +2 XP!");
@@ -1839,7 +1694,6 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                             PlayerInfo[i][pXP] += 2;
                         }
                     }
-                    SelectTextDraw(playerid, COR_ROXO);
                 }
             }
         }
@@ -1852,7 +1706,6 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
             GetPlayerFacingAngle(playerid, a);
             new v = CriarVeiculoComCombustivel(ModeloDono[listitem], x + 3.0, y, z, a, -1, -1);
             PutPlayerInVehicle(playerid, v, 0);
-            SelectTextDraw(playerid, COR_ROXO);
         }
 
         case DIALOG_DONO_TELEPORTES:
@@ -1870,7 +1723,6 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                 case 5: SetPlayerPos(playerid, POS_POSTO_X, POS_POSTO_Y, POS_POSTO_Z);
                 case 6: SetPlayerPos(playerid, POS_DROGA_X, POS_DROGA_Y, POS_DROGA_Z);
             }
-            SelectTextDraw(playerid, COR_ROXO);
         }
     }
     return 1;
@@ -1897,15 +1749,8 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
             SendClientMessage(playerid, COR_LARANJA, "[TRANSITO] Dirigindo sem CNH! Va a Prefeitura tirar sua habilitacao.");
 
         new vid = GetPlayerVehicleID(playerid);
-        if (vid > 0 && vid < MAX_VEICULOS_SERVIDOR)
-        {
-            if (CombustivelVeh[vid] <= 0 && !MotorLigadoVeh[vid])
-                CombustivelVeh[vid] = 50;
-
-            new e, l, a, d, bo, b, o;
-            GetVehicleParamsEx(vid, e, l, a, d, bo, b, o);
-            SetVehicleParamsEx(vid, MotorLigadoVeh[vid] ? 1 : 0, l, a, d, bo, b, o);
-        }
+        if (vid > 0 && vid < MAX_VEICULOS_SERVIDOR && CombustivelVeh[vid] == 0 && !MotorLigadoVeh[vid])
+            CombustivelVeh[vid] = 50; // Garante combustivel inicial caso seja veiculo nativo do mapa
     }
     return 1;
 }
@@ -1925,7 +1770,6 @@ public OnPlayerEnterCheckpoint(playerid)
     if (emp == 1)
     {
         GivePlayerMoney(playerid, 250);
-        SincronizarDinheiro(playerid);
         SendClientMessage(playerid, COR_VERDE, "[iFood] Entrega concluida! +$250.");
         etapa = (etapa + 1 >= 5) ? 0 : etapa + 1;
         PlayerInfo[playerid][pEtapaTrabalho] = etapa;
@@ -1934,7 +1778,6 @@ public OnPlayerEnterCheckpoint(playerid)
     else if (emp == 2)
     {
         GivePlayerMoney(playerid, 400);
-        SincronizarDinheiro(playerid);
         SendClientMessage(playerid, COR_VERDE, "[ONIBUS] Parada concluida! +$400.");
         etapa = (etapa + 1 >= 5) ? 0 : etapa + 1;
         PlayerInfo[playerid][pEtapaTrabalho] = etapa;
@@ -1948,12 +1791,14 @@ public TimerGeralServidor()
     static seg = 0;
     seg++;
 
+    // Consumo gradual de combustivel a cada 5s
     if (seg % 5 == 0)
     {
         for (new v = 1; v < MAX_VEICULOS_SERVIDOR; v++)
         {
             if (CombustivelVeh[v] > 0)
             {
+                // Verifica se ha motorista dirigindo
                 for (new p = 0; p < MAX_PLAYERS; p++)
                 {
                     if (IsPlayerConnected(p) && GetPlayerState(p) == PLAYER_STATE_DRIVER && GetPlayerVehicleID(p) == v)
@@ -1965,9 +1810,6 @@ public TimerGeralServidor()
                             {
                                 CombustivelVeh[v] = 0;
                                 MotorLigadoVeh[v] = false;
-                                new e, l, a, d, bo, b, o;
-                                GetVehicleParamsEx(v, e, l, a, d, bo, b, o);
-                                SetVehicleParamsEx(v, 0, l, a, d, bo, b, o);
                                 SendClientMessage(p, COR_VERMELHO, "[COMBUSTIVEL] Acabou a gasolina! Va ao Posto (use o GPS).");
                             }
                         }
@@ -2003,7 +1845,6 @@ public TimerGeralServidor()
                     SetPlayerScore(i, PlayerInfo[i][pNivel]);
                     SendClientMessage(i, COR_ROXO_CLARO, "PARABENS! Voce alcancou um novo nivel!");
                 }
-                SincronizarDinheiro(i);
                 SalvarConta(i);
             }
         }
@@ -2051,37 +1892,23 @@ public OnPlayerCommandText(playerid, cmdtext[])
     if (!strcmp(cmdtext, "/inv", true) || !strcmp(cmdtext, "/inventario", true)) { MostrarInventario(playerid); return 1; }
     if (!strcmp(cmdtext, "/parar", true)) { PararTrabalho(playerid); return 1; }
 
-    if (!strcmp(cmdtext, "/id", true) || !strcmp(cmdtext, "/jogadores", true))
-    {
-        SendClientMessage(playerid, COR_ROXO, "=== JOGADORES ONLINE ===");
-        for (new i = 0; i < MAX_PLAYERS; i++)
-        {
-            if (IsPlayerConnected(i) && PlayerInfo[i][pLogado])
-            {
-                new linha[96];
-                format(linha, sizeof(linha), "ID %d - %s (Nv.%d | %s)", i, GetNome(i), PlayerInfo[i][pNivel], ObterNomeEmprego(PlayerInfo[i][pEmprego]));
-                SendClientMessage(playerid, COR_BRANCO, linha);
-            }
-        }
-        return 1;
-    }
-
     if (!strcmp(cmdtext, "/reparar", true))
     {
         if (PlayerInfo[playerid][pEmprego] != 4)
             return SendClientMessage(playerid, COR_VERMELHO, "Apenas Mecanicos podem usar /reparar!");
 
+        new Float:x, Float:y, Float:z;
+        GetPlayerPos(playerid, x, y, z);
         for (new v = 1; v < MAX_VEICULOS_SERVIDOR; v++)
         {
-            new Float:vx, Float:vy, Float:vz;
-            GetVehiclePos(v, vx, vy, vz);
-            if (vx != 0.0 || vy != 0.0 || vz != 0.0)
+            if (IsPlayerInRangeOfPoint(playerid, 5.0, x, y, z))
             {
-                if (IsPlayerInRangeOfPoint(playerid, 5.5, vx, vy, vz))
+                new Float:vx, Float:vy, Float:vz;
+                GetVehiclePos(v, vx, vy, vz);
+                if (IsPlayerInRangeOfPoint(playerid, 5.0, vx, vy, vz))
                 {
                     RepairVehicle(v);
                     GivePlayerMoney(playerid, 200);
-                    SincronizarDinheiro(playerid);
                     SendClientMessage(playerid, COR_VERDE, "[MECANICO] Veiculo reparado! Voce ganhou $200.");
                     return 1;
                 }
@@ -2108,8 +1935,6 @@ public OnPlayerCommandText(playerid, cmdtext[])
         new roubo = grana / 4;
         GivePlayerMoney(alvo, -roubo);
         GivePlayerMoney(playerid, roubo);
-        SincronizarDinheiro(alvo);
-        SincronizarDinheiro(playerid);
 
         if (PlayerInfo[playerid][pProcurado] < 5) PlayerInfo[playerid][pProcurado]++;
         SetPlayerWantedLevel(playerid, PlayerInfo[playerid][pProcurado]);
@@ -2168,9 +1993,9 @@ public OnPlayerCommandText(playerid, cmdtext[])
 
     if (!strcmp(cmdtext, "/ajuda", true))
     {
-        SendClientMessage(playerid, COR_ROXO, "=== ZK RP v3.1 - COMANDOS ===");
-        SendClientMessage(playerid, COR_BRANCO, "Botoes: MENU, ACAO, CARRO, GPS, FONE.");
-        SendClientMessage(playerid, COR_CINZA, "Comandos: /id, /inv, /g, /s, /me, /do, /assaltar, /reparar, /parar.");
+        SendClientMessage(playerid, COR_ROXO, "=== ZK RP v3.0 - COMANDOS ===");
+        SendClientMessage(playerid, COR_BRANCO, "Botoes na tela: MENU, ACAO, CARRO, GPS, FONE.");
+        SendClientMessage(playerid, COR_CINZA, "Comandos: /inv, /g, /s, /me, /do, /assaltar, /reparar, /parar.");
         return 1;
     }
 
