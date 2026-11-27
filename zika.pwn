@@ -376,6 +376,27 @@ public OnGameModeInit()
     TextDrawSetProportional(LogoRP, 1);
     TextDrawSetSelectable(LogoRP, 0);
 
+        // HUD MODERNO ZK RP
+
+    HUDNome = TextDrawCreate(320.0, 38.0, "ZK ROLEPLAY");
+    TextDrawAlignment(HUDNome, 2);
+    TextDrawLetterSize(HUDNome, 0.20, 0.85);
+    TextDrawColor(HUDNome, 0xFFFFFFFF);
+    TextDrawSetOutline(HUDNome, 0);
+    TextDrawSetShadow(HUDNome, 0);
+    TextDrawFont(HUDNome, 2);
+
+    HUDDinheiro = TextDrawCreate(15.0, 390.0, "DINHEIRO: $0");
+    TextDrawLetterSize(HUDDinheiro, 0.20, 0.85);
+    TextDrawColor(HUDDinheiro, 0x9B5CFFFF);
+    TextDrawSetOutline(HUDDinheiro, 1);
+    TextDrawFont(HUDDinheiro, 2);
+
+    HUDVida = TextDrawCreate(15.0, 410.0, "VIDA: 100");
+    TextDrawLetterSize(HUDVida, 0.20, 0.85);
+    TextDrawColor(HUDVida, 0xFFFFFFFF);
+    TextDrawSetOutline(HUDVida, 1);
+    TextDrawFont(HUDVida, 2);
 
     FuncionarioEmpregos = CreateActor(
         17,
