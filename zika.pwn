@@ -520,6 +520,9 @@ public OnPlayerSpawn(playerid)
 {
     TextDrawShowForPlayer(playerid, LogoZK);
 TextDrawShowForPlayer(playerid, LogoRP);
+new Text:HUDDinheiro;
+new Text:HUDVida;
+new Text:HUDNome;
 
     if (EhDono(playerid))
     {
