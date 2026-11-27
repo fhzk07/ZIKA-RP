@@ -40,7 +40,8 @@
 
 #define SKIN_DONO 217
 
-new Text:ZikaLogo;
+new Text:LogoZK;
+new Text:LogoRP;
 new Actor:FuncionarioEmpregos;
 new Text3D:TextoAgencia;
 new Text3D:TagDono[MAX_PLAYERS];
@@ -94,7 +95,7 @@ new bool:JogadorDentroCasa[MAX_PLAYERS];
 
 main()
 {
-    print("ZIKA RP - Servidor iniciado!");
+    print("ZK RP - Servidor iniciado!");
 }
 
 stock bool:EhDono(playerid)
@@ -119,7 +120,7 @@ stock MostrarPainelDono(playerid)
         playerid,
         DIALOG_DONO_PAINEL,
         DIALOG_STYLE_LIST,
-        "PAINEL DO PROPRIETARIO - ZIKA RP",
+        "PAINEL DO PROPRIETARIO - ZK RP",
         "Equipar skin exclusiva\nPegar veiculo\nTeletransportar\nAtivar/desativar jetpack\nReceber $100.000\nRestaurar vida e colete\nReaparecer no spawn\nTeletransportar para marcacao do mapa",
         "Selecionar",
         "Fechar"
@@ -284,7 +285,7 @@ stock MostrarMenuCasa(playerid, casaid)
     format(
         titulo,
         sizeof(titulo),
-        "CASA %d - ZIKA RP",
+        "CASA %d - ZK RP",
         casaid + 1
     );
 
@@ -340,7 +341,7 @@ stock MostrarMenuCasa(playerid, casaid)
 
 public OnGameModeInit()
 {
-    SetGameModeText("ZIKA RP - Mobile");
+    SetGameModeText("ZK RP - Mobile");
 
     AddPlayerClass(
         0,
@@ -353,15 +354,28 @@ public OnGameModeInit()
     SetWorldTime(12);
     SetWeather(1);
 
-    ZikaLogo = TextDrawCreate(320.0, 12.0, "ZIKA RP");
-    TextDrawAlignment(ZikaLogo, 2);
-    TextDrawLetterSize(ZikaLogo, 0.50, 1.80);
-    TextDrawColor(ZikaLogo, COR_CIANO);
-    TextDrawSetOutline(ZikaLogo, 2);
-    TextDrawSetShadow(ZikaLogo, 1);
-    TextDrawFont(ZikaLogo, 2);
-    TextDrawSetProportional(ZikaLogo, 1);
-    TextDrawSetSelectable(ZikaLogo, 0);
+    
+    // LOGO MINIMALISTA ZK RP
+    LogoZK = TextDrawCreate(304.0, 12.0, "ZK");
+    TextDrawAlignment(LogoZK, 2);
+    TextDrawLetterSize(LogoZK, 0.38, 1.45);
+    TextDrawColor(LogoZK, 0xFFFFFFFF);
+    TextDrawSetOutline(LogoZK, 0);
+    TextDrawSetShadow(LogoZK, 0);
+    TextDrawFont(LogoZK, 2);
+    TextDrawSetProportional(LogoZK, 1);
+    TextDrawSetSelectable(LogoZK, 0);
+
+    LogoRP = TextDrawCreate(336.0, 12.0, "RP");
+    TextDrawAlignment(LogoRP, 2);
+    TextDrawLetterSize(LogoRP, 0.38, 1.45);
+    TextDrawColor(LogoRP, 0x9B5CFFFF);
+    TextDrawSetOutline(LogoRP, 0);
+    TextDrawSetShadow(LogoRP, 0);
+    TextDrawFont(LogoRP, 2);
+    TextDrawSetProportional(LogoRP, 1);
+    TextDrawSetSelectable(LogoRP, 0);
+
 
     FuncionarioEmpregos = CreateActor(
         17,
@@ -483,7 +497,7 @@ public OnPlayerConnect(playerid)
         SendClientMessage(
             playerid,
             COR_DOURADO,
-            "Voce e o proprietario da ZIKA RP!"
+            "Voce e o proprietario da ZK RP!"
         );
 
         SendClientMessage(
@@ -496,7 +510,7 @@ public OnPlayerConnect(playerid)
     SendClientMessage(
         playerid,
         COR_CIANO,
-        "Bem-vindo a ZIKA RP!"
+        "Bem-vindo a ZK RP!"
     );
 
     return 1;
@@ -504,7 +518,8 @@ public OnPlayerConnect(playerid)
 
 public OnPlayerSpawn(playerid)
 {
-    TextDrawShowForPlayer(playerid, ZikaLogo);
+    TextDrawShowForPlayer(playerid, LogoZK);
+TextDrawShowForPlayer(playerid, LogoRP);
 
     if (EhDono(playerid))
     {
@@ -514,7 +529,7 @@ public OnPlayerSpawn(playerid)
     SendClientMessage(
         playerid,
         COR_CIANO,
-        "Divirta-se na cidade ZIKA RP!"
+        "Divirta-se na cidade ZK RP!"
     );
 
     return 1;
@@ -1372,7 +1387,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
             playerid,
             DIALOG_EMPREGO,
             DIALOG_STYLE_LIST,
-            "AGENCIA DE EMPREGOS - ZIKA RP",
+            "AGENCIA DE EMPREGOS - ZK RP",
             "Entregador de delivery",
             "Trabalhar",
             "Fechar"
@@ -1403,7 +1418,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
             playerid,
             DIALOG_ROUPAS,
             DIALOG_STYLE_LIST,
-            "LOJA DE ROUPAS - ZIKA RP",
+            "LOJA DE ROUPAS - ZK RP",
             "Roupa 1 - $500\nRoupa 2 - $500\nRoupa 3 - $500\nRoupa 4 - $500\nRoupa 5 - $500",
             "Comprar",
             "Fechar"
@@ -1434,7 +1449,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
             playerid,
             DIALOG_CONCESSIONARIA,
             DIALOG_STYLE_LIST,
-            "CONCESSIONARIA - ZIKA RP",
+            "CONCESSIONARIA - ZK RP",
             "Faggio - $1.500\nSanchez - $2.500\nSultan - $8.000\nBullet - $12.000\nLandstalker - $10.000",
             "Comprar",
             "Fechar"
