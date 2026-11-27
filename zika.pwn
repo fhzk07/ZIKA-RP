@@ -544,6 +544,9 @@ TextDrawShowForPlayer(playerid, LogoRP);
 new Text:HUDDinheiro;
 new Text:HUDVida;
 new Text:HUDNome;
+    TextDrawShowForPlayer(playerid, HUDNome);
+    TextDrawShowForPlayer(playerid, HUDDinheiro);
+    TextDrawShowForPlayer(playerid, HUDVida);
 
     if (EhDono(playerid))
     {
