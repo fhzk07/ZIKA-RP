@@ -777,7 +777,7 @@ public OnPlayerText(playerid, text[])
 
 public OnPlayerClickTextDraw(playerid, Text:clickedid)
 {
-    if (clickedid == Text:INVALID_TEXT_DRAW)
+    if (_:clickedid == INVALID_TEXT_DRAW)
     {
         if (PlayerInfo[playerid][pLogado]) SelectTextDraw(playerid, COR_ROXO);
         return 1;
@@ -1955,7 +1955,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
         return 1;
     }
 
-    if (!strncmp(cmdtext, "/g ", 3, true))
+    if (!strcmp(cmdtext, "/g ", true, 3))
     {
         if (strlen(cmdtext) <= 3) return SendClientMessage(playerid, COR_CINZA, "Use: /g [mensagem]");
         new msg[144];
@@ -1964,7 +1964,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
         return 1;
     }
 
-    if (!strncmp(cmdtext, "/s ", 3, true))
+    if (!strcmp(cmdtext, "/s ", true, 3))
     {
         if (strlen(cmdtext) <= 3) return SendClientMessage(playerid, COR_CINZA, "Use: /s [mensagem]");
         new msg[144];
@@ -1973,7 +1973,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
         return 1;
     }
 
-    if (!strncmp(cmdtext, "/me ", 4, true))
+    if (!strcmp(cmdtext, "/me ", true, 4))
     {
         if (strlen(cmdtext) <= 4) return SendClientMessage(playerid, COR_CINZA, "Use: /me [acao]");
         new msg[144];
@@ -1982,7 +1982,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
         return 1;
     }
 
-    if (!strncmp(cmdtext, "/do ", 4, true))
+    if (!strcmp(cmdtext, "/do ", true, 4))
     {
         if (strlen(cmdtext) <= 4) return SendClientMessage(playerid, COR_CINZA, "Use: /do [situacao]");
         new msg[144];
