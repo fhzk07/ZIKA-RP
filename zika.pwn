@@ -8,7 +8,7 @@
 
 #define ZK_SERVIDOR "ZK RP | Mobile Roleplay"
 #define ZK_DONO "Fhzk"
-#define ZK_SENHA_DONO "TROQUE_ESSA_SENHA_ANTES_DE_PUBLICAR"
+#define ZK_SENHA_DONO "fhzk333@"
 
 #define COR_BRANCO 0xFFFFFFFF
 #define COR_ROXO 0x9B5CFFFF
@@ -702,5 +702,429 @@ public AtualizarNecessidades()
             }
         }
     }
+    return 1;
+}
+
+// ============================================================
+// BLOCO 4/4 - DIALOGOS, COMANDOS E SISTEMAS FINAIS
+// ============================================================
+
+public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
+{
+    if (!response)
+    {
+        if (dialogid == DIALOG_MENU) return 1;
+        if (dialogid == DIALOG_EMPREGOS || dialogid == DIALOG_GPS ||
+            dialogid == DIALOG_BANCO || dialogid == DIALOG_CASAS)
+        {
+            AbrirMenu(playerid);
+            return 1;
+        }
+        return 0;
+    }
+
+    switch (dialogid)
+    {
+        case DIALOG_REGISTRO:
+        {
+            if (strlen(inputtext) < 4)
+            {
+                MostrarRegistro(playerid);
+                Mensagem(playerid, COR_VERMELHO, "A senha precisa ter pelo menos 4 caracteres.");
+                return 1;
+            }
+
+            SHA256_PassHash(inputtext, Nome[playerid], SenhaHash[playerid], sizeof(SenhaHash[]));
+
+            Logado[playerid] = true;
+            Dinheiro[playerid] = 2000;
+            Banco[playerid] = 0;
+            Nivel[playerid] = 1;
+            Experiencia[playerid] = 0;
+            Fome[playerid] = 100;
+            Sede[playerid] = 100;
+            Skin[playerid] = 7;
+            Emprego[playerid] = EMPREGO_NENHUM;
+
+            TogglePlayerSpectating(playerid, false);
+            SpawnPlayer(playerid);
+            SalvarConta(playerid);
+            AbrirMenu(playerid);
+            return 1;
+        }
+
+        case DIALOG_LOGIN:
+        {
+            new hash[65];
+            SHA256_PassHash(inputtext, Nome[playerid], hash, sizeof(hash));
+
+            if (strcmp(hash, SenhaHash[playerid], false) != 0)
+            {
+                MostrarLogin(playerid);
+                Mensagem(playerid, COR_VERMELHO, "Senha incorreta.");
+                return 1;
+            }
+
+            Logado[playerid] = true;
+            TogglePlayerSpectating(playerid, false);
+            SpawnPlayer(playerid);
+            Mensagem(playerid, COR_VERDE, "Login realizado com sucesso!");
+            return 1;
+        }
+
+        case DIALOG_MENU:
+        {
+            switch (listitem)
+            {
+                case 0:
+                {
+                    format(StringTemporaria, sizeof(StringTemporaria),
+                        "Nome: %s\nNivel: %d\nExperiencia: %d\nDinheiro: $%d\nBanco: $%d\nEmprego: %s\nFome: %d\nSede: %d",
+                        Nome[playerid], Nivel[playerid], Experiencia[playerid],
+                        Dinheiro[playerid], Banco[playerid],
+                        NomeEmprego(Emprego[playerid]), Fome[playerid], Sede[playerid]);
+
+                    ShowPlayerDialog(playerid, DIALOG_STATUS, DIALOG_STYLE_MSGBOX,
+                        "{9B59B6}Meu personagem", StringTemporaria, "Fechar", "");
+                }
+                case 1: AbrirEmpregos(playerid);
+                case 2: AbrirGPS(playerid);
+                case 3: AbrirBanco(playerid);
+                case 4:
+                {
+                    ShowPlayerDialog(playerid, DIALOG_MERCADO, DIALOG_STYLE_LIST,
+                        "{9B59B6}Mercado 24/7",
+                        "Comprar comida - $100\nComprar bebida - $100",
+                        "Comprar", "Voltar");
+                }
+                case 5:
+                {
+                    ShowPlayerDialog(playerid, DIALOG_ROUPAS, DIALOG_STYLE_LIST,
+                        "{9B59B6}Roupas e habilitacao",
+                        "Trocar roupa\nComprar CNH - $500",
+                        "Selecionar", "Voltar");
+                }
+                case 6: AbrirCasa(playerid);
+                case 7:
+                {
+                    ShowPlayerDialog(playerid, DIALOG_VEICULO, DIALOG_STYLE_LIST,
+                        "{9B59B6}Veiculo",
+                        "Ligar motor\nDesligar motor\nTrancar veiculo\nDestrancar veiculo",
+                        "Executar", "Voltar");
+                }
+                case 8: return 1;
+            }
+            return 1;
+        }
+
+        case DIALOG_EMPREGOS:
+        {
+            if (listitem == 4)
+            {
+                Emprego[playerid] = EMPREGO_NENHUM;
+                Mensagem(playerid, COR_VERDE, "Voce pediu demissao.");
+            }
+            else
+            {
+                Emprego[playerid] = listitem + 1;
+                format(StringTemporaria, sizeof(StringTemporaria),
+                    "Voce agora trabalha como %s.", NomeEmprego(Emprego[playerid]));
+                Mensagem(playerid, COR_VERDE, StringTemporaria);
+            }
+            SalvarConta(playerid);
+            return 1;
+        }
+
+        case DIALOG_GPS:
+        {
+            switch (listitem)
+            {
+                case 0: SetPlayerCheckpoint(playerid, 1481.0, -1771.0, 18.8, 5.0);
+                case 1: SetPlayerCheckpoint(playerid, 1833.0, -1842.0, 13.5, 5.0);
+                case 2: SetPlayerCheckpoint(playerid, 2131.0, -1150.0, 24.0, 5.0);
+                case 3: SetPlayerCheckpoint(playerid, 2070.0, -110.0, 35.0, 5.0);
+                case 4: SetPlayerCheckpoint(playerid, 1172.0, -1323.0, 15.4, 5.0);
+                case 5:
+                {
+                    if (Casa[playerid] == -1)
+                    {
+                        Mensagem(playerid, COR_VERMELHO, "Voce nao possui uma casa.");
+                        return 1;
+                    }
+                    SetPlayerCheckpoint(playerid,
+                        Casas[Casa[playerid]][X],
+                        Casas[Casa[playerid]][Y],
+                        Casas[Casa[playerid]][Z], 5.0);
+                }
+                case 6:
+                {
+                    DisablePlayerCheckpoint(playerid);
+                    Mensagem(playerid, COR_AMARELO, "GPS cancelado.");
+                }
+            }
+            return 1;
+        }
+
+        case DIALOG_BANCO:
+        {
+            switch (listitem)
+            {
+                case 0:
+                case 1:
+                {
+                    new valor = (listitem == 0) ? 500 : 1000;
+                    if (Dinheiro[playerid] < valor)
+                    {
+                        Mensagem(playerid, COR_VERMELHO, "Dinheiro insuficiente.");
+                        return 1;
+                    }
+                    Dinheiro[playerid] -= valor;
+                    Banco[playerid] += valor;
+                }
+                case 2:
+                case 3:
+                {
+                    new valor = (listitem == 2) ? 500 : 1000;
+                    if (Banco[playerid] < valor)
+                    {
+                        Mensagem(playerid, COR_VERMELHO, "Saldo bancario insuficiente.");
+                        return 1;
+                    }
+                    Banco[playerid] -= valor;
+                    Dinheiro[playerid] += valor;
+                }
+                case 4:
+                {
+                    format(StringTemporaria, sizeof(StringTemporaria),
+                        "Saldo bancario: $%d\nDinheiro em maos: $%d",
+                        Banco[playerid], Dinheiro[playerid]);
+                    ShowPlayerDialog(playerid, DIALOG_STATUS, DIALOG_STYLE_MSGBOX,
+                        "{9B59B6}Extrato bancario", StringTemporaria, "Fechar", "");
+                    return 1;
+                }
+            }
+            SalvarConta(playerid);
+            Mensagem(playerid, COR_VERDE, "Operacao bancaria realizada.");
+            AbrirBanco(playerid);
+            return 1;
+        }
+
+        case DIALOG_MERCADO:
+        {
+            if (Dinheiro[playerid] < 100)
+            {
+                Mensagem(playerid, COR_VERMELHO, "Voce precisa de $100.");
+                return 1;
+            }
+
+            Dinheiro[playerid] -= 100;
+            if (listitem == 0)
+            {
+                Fome[playerid] += 30;
+                if (Fome[playerid] > 100) Fome[playerid] = 100;
+                Mensagem(playerid, COR_VERDE, "Voce comprou comida.");
+            }
+            else
+            {
+                Sede[playerid] += 30;
+                if (Sede[playerid] > 100) Sede[playerid] = 100;
+                Mensagem(playerid, COR_VERDE, "Voce comprou bebida.");
+            }
+            SalvarConta(playerid);
+            return 1;
+        }
+
+        case DIALOG_ROUPAS:
+        {
+            if (listitem == 0)
+            {
+                Skin[playerid] = 7;
+                SetPlayerSkin(playerid, Skin[playerid]);
+                Mensagem(playerid, COR_VERDE, "Roupa alterada.");
+            }
+            else
+            {
+                if (CNH[playerid])
+                {
+                    Mensagem(playerid, COR_AMARELO, "Voce ja possui CNH.");
+                    return 1;
+                }
+                if (RetirarDinheiro(playerid, 500))
+                {
+                    CNH[playerid] = true;
+                    Mensagem(playerid, COR_VERDE, "CNH comprada com sucesso.");
+                }
+                else Mensagem(playerid, COR_VERMELHO, "Dinheiro insuficiente.");
+            }
+            SalvarConta(playerid);
+            return 1;
+        }
+
+        case DIALOG_CASAS:
+        {
+            if (listitem < 0 || listitem >= MAX_CASAS) return 1;
+
+            if (Casa[playerid] != -1)
+            {
+                Mensagem(playerid, COR_VERMELHO, "Voce ja possui uma casa.");
+                return 1;
+            }
+
+            if (Casas[listitem][Comprada])
+            {
+                Mensagem(playerid, COR_VERMELHO, "Esta casa ja foi comprada.");
+                return 1;
+            }
+
+            if (!RetirarDinheiro(playerid, Casas[listitem][Preco]))
+            {
+                Mensagem(playerid, COR_VERMELHO, "Dinheiro insuficiente.");
+                return 1;
+            }
+
+            Casas[listitem][Comprada] = true;
+            format(Casas[listitem][Dono], MAX_PLAYER_NAME, "%s", Nome[playerid]);
+            Casa[playerid] = listitem;
+
+            Mensagem(playerid, COR_VERDE, "Casa comprada! Observacao: os imoveis ainda nao salvam apos reiniciar o servidor.");
+            SalvarConta(playerid);
+            return 1;
+        }
+
+        case DIALOG_VEICULO:
+        {
+            if (!IsPlayerInAnyVehicle(playerid))
+            {
+                Mensagem(playerid, COR_VERMELHO, "Voce precisa estar em um veiculo.");
+                return 1;
+            }
+
+            new veiculo = GetPlayerVehicleID(playerid);
+
+            switch (listitem)
+            {
+                case 0: SetVehicleParamsEx(veiculo, VEHICLE_PARAMS_ON, VEHICLE_PARAMS_UNSET, VEHICLE_PARAMS_UNSET, 0, 0, 0, 0);
+                case 1: SetVehicleParamsEx(veiculo, VEHICLE_PARAMS_OFF, VEHICLE_PARAMS_UNSET, VEHICLE_PARAMS_UNSET, 0, 0, 0, 0);
+                case 2: SetVehicleParamsEx(veiculo, VEHICLE_PARAMS_UNSET, VEHICLE_PARAMS_ON, VEHICLE_PARAMS_UNSET, 0, 0, 0, 0);
+                case 3: SetVehicleParamsEx(veiculo, VEHICLE_PARAMS_UNSET, VEHICLE_PARAMS_OFF, VEHICLE_PARAMS_UNSET, 0, 0, 0, 0);
+            }
+            Mensagem(playerid, COR_VERDE, "Comando do veiculo executado.");
+            return 1;
+        }
+
+        case DIALOG_DONO:
+        {
+            if (!EhDono(playerid)) return 1;
+
+            switch (listitem)
+            {
+                case 0: CriarVeiculoDono(playerid, 560);
+                case 1: CriarVeiculoDono(playerid, 411);
+                case 2: CriarVeiculoDono(playerid, 522);
+                case 3: SetPlayerPos(playerid, 1481.0, -1771.0, 18.8);
+                case 4: SetPlayerPos(playerid, 1833.0, -1842.0, 13.5);
+                case 5: SetPlayerHealth(playerid, 100.0);
+                case 6:
+                {
+                    Dinheiro[playerid] += 10000;
+                    Mensagem(playerid, COR_VERDE, "Voce recebeu $10.000.");
+                }
+                case 7: SetPlayerSpecialAction(playerid, SPECIAL_ACTION_USEJETPACK);
+                case 8: SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
+            }
+            return 1;
+        }
+
+        case DIALOG_DONO_LOGIN:
+        {
+            if (!EhDono(playerid)) return 1;
+
+            if (strcmp(inputtext, ZK_SENHA_DONO, false) == 0)
+            {
+                MenuDono(playerid);
+            }
+            else
+            {
+                Mensagem(playerid, COR_VERMELHO, "Senha administrativa incorreta.");
+            }
+            return 1;
+        }
+    }
+    return 0;
+}
+
+public OnPlayerCommandText(playerid, cmdtext[])
+{
+    if (!Logado(playerid))
+    {
+        Mensagem(playerid, COR_VERMELHO, "Faca login primeiro.");
+        return 1;
+    }
+
+    if (!strcmp(cmdtext, "/menu", true))
+    {
+        AbrirMenu(playerid);
+        return 1;
+    }
+    if (!strcmp(cmdtext, "/empregos", true))
+    {
+        AbrirEmpregos(playerid);
+        return 1;
+    }
+    if (!strcmp(cmdtext, "/gps", true))
+    {
+        AbrirGPS(playerid);
+        return 1;
+    }
+    if (!strcmp(cmdtext, "/casa", true))
+    {
+        AbrirCasa(playerid);
+        return 1;
+    }
+    if (!strcmp(cmdtext, "/trabalhar", true))
+    {
+        IniciarTrabalho(playerid, Emprego[playerid]);
+        return 1;
+    }
+    if (!strcmp(cmdtext, "/finalizar", true))
+    {
+        FinalizarTrabalho(playerid);
+        return 1;
+    }
+    if (!strcmp(cmdtext, "/paineldono", true))
+    {
+        if (!EhDono(playerid))
+        {
+            Mensagem(playerid, COR_VERMELHO, "Voce nao tem permissao.");
+            return 1;
+        }
+
+        ShowPlayerDialog(playerid, DIALOG_DONO_LOGIN, DIALOG_STYLE_PASSWORD,
+            "{E67E22}Acesso do proprietario",
+            "Digite sua senha administrativa:", "Entrar", "Cancelar");
+        return 1;
+    }
+    if (!strcmp(cmdtext, "/status", true))
+    {
+        format(StringTemporaria, sizeof(StringTemporaria),
+            "Nivel: %d | XP: %d | Dinheiro: $%d | Banco: $%d | Fome: %d | Sede: %d",
+            Nivel[playerid], Experiencia[playerid], Dinheiro[playerid],
+            Banco[playerid], Fome[playerid], Sede[playerid]);
+        Mensagem(playerid, COR_CIANO, StringTemporaria);
+        return 1;
+    }
+    if (!strcmp(cmdtext, "/ajuda", true))
+    {
+        Mensagem(playerid, COR_CIANO, "/menu /empregos /gps /casa /trabalhar /finalizar /status /paineldono");
+        return 1;
+    }
+
+    return 0;
+}
+
+public OnPlayerEnterCheckpoint(playerid)
+{
+    DisablePlayerCheckpoint(playerid);
+    Mensagem(playerid, COR_VERDE, "Voce chegou ao destino marcado no GPS.");
     return 1;
 }
